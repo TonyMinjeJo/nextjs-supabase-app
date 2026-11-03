@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 명령어
 
-| 명령어 | 설명 |
-| --- | --- |
-| `npm run dev` | 개발 서버 실행 (http://localhost:3000) |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run start` | 프로덕션 서버 실행 |
-| `npm run lint` | ESLint 실행 (`eslint .`) |
+| 명령어          | 설명                                   |
+| --------------- | -------------------------------------- |
+| `npm run dev`   | 개발 서버 실행 (http://localhost:3000) |
+| `npm run build` | 프로덕션 빌드                          |
+| `npm run start` | 프로덕션 서버 실행                     |
+| `npm run lint`  | ESLint 실행 (`eslint .`)               |
 
 - 테스트 러너는 설정되어 있지 않습니다.
 - `.env.local`에 아래 두 환경 변수가 필요합니다. (`.env.example`은 커밋되어 있지 않음)
@@ -42,6 +42,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. **`lib/utils.ts`** 가 `hasEnvVars`를 export하며, 환경 변수가 없으면 proxy는 인증 검사를 건너뜁니다.
 
 **라우트**
+
 - `app/auth/{login,sign-up,sign-up-success,forgot-password,update-password,confirm,error}`
 - `app/protected` — 인증이 필요한 예제 영역
 - 인증 폼은 `components/*-form.tsx`

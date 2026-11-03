@@ -6,3 +6,5 @@ coverage
 package-lock.json
 next-env.d.ts
 shrimp_data
+.claude
+docs
