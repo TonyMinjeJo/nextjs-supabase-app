@@ -4,17 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 명령어
 
-| 명령어          | 설명                                   |
-| --------------- | -------------------------------------- |
-| `npm run dev`   | 개발 서버 실행 (http://localhost:3000) |
-| `npm run build` | 프로덕션 빌드                          |
-| `npm run start` | 프로덕션 서버 실행                     |
-| `npm run lint`  | ESLint 실행 (`eslint .`)               |
+| 명령어                 | 설명                                            |
+| ---------------------- | ----------------------------------------------- |
+| `npm run dev`          | 개발 서버 실행 (http://localhost:3000)          |
+| `npm run build`        | 프로덕션 빌드                                   |
+| `npm run start`        | 프로덕션 서버 실행                              |
+| `npm run lint`         | ESLint 검사                                     |
+| `npm run lint:fix`     | ESLint 자동 수정                                |
+| `npm run typecheck`    | TypeScript 타입 검사 (`tsc --noEmit`)           |
+| `npm run format`       | Prettier로 전체 포맷                            |
+| `npm run format:check` | Prettier 포맷 검사 (수정 없음)                  |
+| `npm run check-all`    | `lint` + `typecheck` + `format:check`를 한 번에 |
 
 - 테스트 러너는 설정되어 있지 않습니다.
 - `.env.local`에 아래 두 환경 변수가 필요합니다. (`.env.example`은 커밋되어 있지 않음)
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+## 작업 완료 체크리스트
+
+코드를 변경한 작업은 끝내기 전에 아래를 **순서대로** 실행하고, 모두 통과한 뒤에만 완료로 보고합니다.
+
+1. `npm run check-all` — ESLint + 타입 체크 + Prettier 검사
+2. `npm run build` — 프로덕션 빌드 (Cache Components 규칙 위반은 빌드에서만 드러날 수 있음)
+
+- 실패하면 원인을 수정한 뒤 처음부터 다시 실행합니다.
+- 통과하지 못한 항목은 숨기지 말고 결과 그대로 보고합니다.
+- 문서만 수정한 경우에는 생략할 수 있습니다.
+
+## 코드 품질 자동화
+
+- **pre-commit** (Husky + lint-staged): 스테이지된 파일에 `eslint --fix`, `prettier --write`를 실행하며, 에러가 있으면 커밋이 차단됩니다.
+- **pre-push**: `npm run check-all`을 실행합니다.
+- **편집 후 자동 포맷**: Edit/Write 직후 `.claude/hooks/format.mjs`가 해당 파일을 Prettier로 포맷합니다. (`.claude/`, `docs/`는 `.prettierignore`로 제외)
+- ESLint는 flat config(`eslint.config.mjs`)이며 `eslint-config-next`를 `next`와 같은 메이저 버전으로 유지해야 합니다.
 
 ## 기술 스택
 
