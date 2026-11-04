@@ -13,19 +13,20 @@
 - **소스는 `src/`가 아닌 저장소 루트**에 둔다: `app/`, `components/`, `lib/`. `docs/guides/project-structure.md`의 `src/` 구조를 따르지 않는다.
 - 경로 별칭은 `@/*` 만 사용한다. 상대 경로(`../`) 대신 별칭을 우선한다.
 
-| 위치                    | 용도                                                              |
-| ----------------------- | ----------------------------------------------------------------- |
-| `app/auth/*`            | 인증 페이지 및 라우트 (`callback`, `confirm`는 Route Handler)     |
-| `app/protected/*`       | 인증 필요 영역                                                    |
-| `components/ui/*`       | shadcn/ui 컴포넌트 (CLI로만 추가)                                 |
-| `components/*-form.tsx` | 인증 폼                                                           |
-| `components/tutorial/*` | 스타터 예제 (제거 대상, 신규 코드에서 참조 금지)                  |
-| `lib/supabase/*`        | Supabase 클라이언트 팩토리 (`server.ts`, `client.ts`, `proxy.ts`) |
-| `lib/auth/safe-next.ts` | `next` 리다이렉트 경로 검증                                       |
-| `proxy.ts` (루트)       | 세션 갱신 진입점 (Next 16에서 `middleware.ts` 대체)               |
-| `docs/guides/*`         | 한국어 컨벤션 문서                                                |
-| `.claude/`              | 에이전트, 커맨드, 훅 (Prettier 제외)                              |
-| `shrimp_data/`          | shrimp-task-manager 데이터. **수정 금지**                         |
+| 위치                    | 용도                                                               |
+| ----------------------- | ------------------------------------------------------------------ |
+| `app/auth/*`            | 인증 페이지 및 라우트 (`callback`, `confirm`는 Route Handler)      |
+| `app/(app)/*`           | 로그인 필요 영역 (`events`, `events/new`, `events/[id]`, `manage`) |
+| `app/e/[code]`          | 공개 이벤트 초대 (요약 + 로그인 유도)                              |
+| `lib/mocks/*`           | Phase 2 더미 데이터 (Phase 3에서 Supabase 쿼리로 교체)             |
+| `components/ui/*`       | shadcn/ui 컴포넌트 (CLI로만 추가)                                  |
+| `components/*-form.tsx` | 인증 폼                                                            |
+| `lib/supabase/*`        | Supabase 클라이언트 팩토리 (`server.ts`, `client.ts`, `proxy.ts`)  |
+| `lib/auth/safe-next.ts` | `next` 리다이렉트 경로 검증                                        |
+| `proxy.ts` (루트)       | 세션 갱신 진입점 (Next 16에서 `middleware.ts` 대체)                |
+| `docs/guides/*`         | 한국어 컨벤션 문서                                                 |
+| `.claude/`              | 에이전트, 커맨드, 훅 (Prettier 제외)                               |
+| `shrimp_data/`          | shrimp-task-manager 데이터. **수정 금지**                          |
 
 ## 코드 표준
 
@@ -43,12 +44,12 @@
 - **금지**: `getClaims()` 제거.
 - **금지**: Supabase 클라이언트를 모듈 전역 변수에 저장. 요청/함수마다 새로 생성한다.
 - 서버 코드는 `await createClient()` (`lib/supabase/server.ts`), 브라우저 코드는 `lib/supabase/client.ts`를 사용한다.
-- 비로그인 허용 경로(`/`, `/login*`, `/auth*`)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
+- 비로그인 허용 경로(`/`, `/login*`, `/auth*`, `/e/*`)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
 - `next` 쿼리 파라미터로 리다이렉트할 때는 반드시 `getSafeNext()`를 거친다.
   - 허용: `redirect(getSafeNext(searchParams.get("next")))`
   - 금지: `redirect(searchParams.get("next")!)`
 - 에러 메시지를 URL에 넣을 때는 `encodeURIComponent()`를 사용한다 (`/auth/error?error=...`).
-- 공유 링크 참여 흐름(비로그인 → 로그인 → 이벤트 초대로 복귀)은 `getSafeNext`의 fallback과 `/auth/callback`의 `next` 전달을 사용한다.
+- 공유 링크 참여 흐름(비로그인 → 로그인 → 이벤트 초대로 복귀)은 `getSafeNext`의 fallback과 `/auth/callback`의 `next` 전달을 사용한다. 기본 복귀 경로는 `lib/auth/safe-next.ts`의 `DEFAULT_AFTER_LOGIN`(`/events`)이다.
 
 ## Next.js 규칙
 
@@ -64,7 +65,7 @@
 - UI 컴포넌트는 shadcn/ui를 사용한다. 새 컴포넌트는 shadcn MCP 또는 `npx shadcn@latest add <name>`으로 `components/ui`에 추가한다. 설정은 `components.json`.
 - `components/ui/*`는 직접 재작성하지 않는다. 변형이 필요하면 래퍼 컴포넌트를 만든다.
 - 도메인 컴포넌트는 `components/` 하위에 기능별로 둔다. 컴포넌트 패턴·스타일링 규칙은 `docs/guides/component-patterns.md`, `docs/guides/styling-guide.md`를 먼저 읽는다.
-- 폼은 `docs/guides/forms-react-hook-form.md` 규칙을 따른다. (현재 `react-hook-form`/`zod`는 미설치 — 도입 시 `package.json`을 갱신하고 해당 가이드를 따른다.)
+- 폼은 `docs/guides/forms-react-hook-form.md` 규칙을 따른다. (`react-hook-form`, `@hookform/resolvers`, `zod`는 설치됨. 스키마는 `lib/validations/*`, 폼 컴포넌트는 `components/event/*-form.tsx`.)
 - 다크 모드는 `next-themes`(`components/theme-switcher.tsx`)를 사용한다. 하드코딩 색상 대신 CSS 변수 기반 Tailwind 토큰을 쓴다.
 - 모바일 우선으로 구현한다. 사용자는 카톡 공유 링크로 모바일에서 진입한다.
 
@@ -102,7 +103,8 @@
 
 - 새 파일 위치가 모호하면: 라우트 → `app/`, 재사용 UI → `components/`, 서버/공용 로직 → `lib/`. `src/`는 만들지 않는다.
 - 클라이언트/서버 선택: 기본은 Server Component. 상태·이벤트 핸들러·브라우저 API가 필요할 때만 `"use client"`.
-- 스타터 예제 코드(`components/tutorial/*`, `app/protected` 예제, `deploy-button`, `hero`)는 해당 Task에서 교체될 대상이다. 새 기능이 의존하게 만들지 않는다.
+- 남은 스타터 컴포넌트(`deploy-button`, `hero`, `auth-button`, `env-var-warning`, `next-logo`, `supabase-logo`)는 더 이상 쓰이지 않는 제거 대상이다. 새 기능이 의존하게 만들지 않는다. (`app/protected`, `components/tutorial`은 삭제됨)
+- 시각(starts_at 등)은 ISO 8601 + 한국시간(`+09:00`)으로 저장·표시한다. 폼의 `datetime-local` 값은 `lib/datetime.ts`의 `toKstIso()`로 변환한다.
 - PRD와 코드가 충돌하면 PRD를 기준으로 하되, 충돌 사실을 보고한다.
 - 문서(`docs/guides`)와 설치된 패키지 동작이 충돌하면 설치된 버전을 따르고 context7로 최신 문서를 확인한다.
 

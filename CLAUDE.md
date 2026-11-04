@@ -55,7 +55,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 1. **`proxy.ts`** (Next 16에서 `middleware.ts`를 대체)가 `lib/supabase/proxy.ts`의 `updateSession`을 호출합니다.
 2. **`updateSession`** 은 `supabase.auth.getClaims()`로 세션 쿠키를 갱신하고, 비로그인 사용자를 `/auth/login`으로 리다이렉트합니다.
-   - 비로그인 허용 경로: `/`, `/login*`, `/auth*`
+   - 비로그인 허용 경로: `/`, `/login*`, `/auth*`, `/e/*` (이벤트 초대: 공개 요약 + 로그인 유도)
+   - 그 외 경로는 `/auth/login?next=<원래 경로>`로 리다이렉트하며, `next`는 `getSafeNext()`로 검증합니다. 기본 복귀 경로는 `/events`입니다.
    - `createServerClient`와 `getClaims()` 사이에 다른 코드를 넣지 마세요.
    - `getClaims()`를 제거하지 마세요.
 3. **Supabase 클라이언트 팩토리**
@@ -67,7 +68,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **라우트**
 
 - `app/auth/{login,sign-up,sign-up-success,forgot-password,update-password,confirm,error}`
-- `app/protected` — 인증이 필요한 예제 영역
+- `app/(app)/events/*` — 로그인 필요 영역 (내 이벤트, 생성, 상세, 관리). 공개 초대는 `app/e/[code]`
 - 인증 폼은 `components/*-form.tsx`
 
 ### Next.js 설정

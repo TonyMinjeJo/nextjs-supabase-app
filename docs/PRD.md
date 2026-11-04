@@ -186,6 +186,8 @@
 
 ## 🗄️ 데이터 모델
 
+> **시각 처리 규칙:** 서비스는 한국 시간(KST, +09:00)을 기준으로 합니다. 폼의 `datetime-local` 값(시간대 없음)은 `lib/datetime.ts`의 `toKstIso()`로 ISO 8601(`+09:00`)로 변환해 저장하고, 화면 표시는 `Asia/Seoul`로 고정합니다. (Task 005-1에서 확정)
+
 ### profiles (사용자)
 
 | 필드       | 설명        | 타입/관계        |
@@ -222,6 +224,7 @@
 | user_id  | 참여자      | → profiles.id                 |
 | status   | 참석 상태   | going / not_going / waitlist  |
 | attended | 출석 여부   | boolean                       |
+| created_at | 응답 시각 (대기 순번 기준: 먼저 응답한 순) | timestamp |
 
 ### announcements (공지)
 
@@ -231,6 +234,7 @@
 | event_id  | 이벤트      | → events.id   |
 | body      | 공지 내용   | text          |
 | pinned    | 상단 고정   | boolean       |
+| created_at | 작성 시각 (최신순 정렬 기준) | timestamp |
 
 ### carpool_rides (카풀 운행)
 
