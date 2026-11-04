@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,9 @@ import { useState } from "react";
 
 export function LoginForm({
   className,
+  next = DEFAULT_AFTER_LOGIN,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: React.ComponentPropsWithoutRef<"div"> & { next?: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +41,8 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      // 로그인 성공 시 검증된 next 경로(기본: 내 이벤트)로 이동합니다.
+      router.push(next);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -58,7 +60,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleSignInButton />
+          <GoogleSignInButton next={next} />
           <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
             또는

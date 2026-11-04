@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
@@ -32,7 +33,13 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignInButton({ next = "/protected" }: { next?: string }) {
+export function GoogleSignInButton({
+  next = DEFAULT_AFTER_LOGIN,
+  label = "Google로 계속하기",
+}: {
+  next?: string;
+  label?: string;
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,7 +72,7 @@ export function GoogleSignInButton({ next = "/protected" }: { next?: string }) {
         onClick={handleClick}
       >
         <GoogleIcon />
-        {isLoading ? "Google로 이동 중..." : "Google로 계속하기"}
+        {isLoading ? "Google로 이동 중..." : label}
       </Button>
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
