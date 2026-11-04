@@ -1,58 +1,69 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
-import { Hero } from "@/components/hero";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-steps";
-import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
+import { Button } from "@/components/ui/button";
+import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
+import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense } from "react";
 
+// 로그인 상태에 따라 시작 버튼 동선을 나눕니다. (비로그인: Google 로그인, 로그인: 내 이벤트)
+async function StartButton() {
+  if (!hasEnvVars) {
+    return (
+      <Button asChild className="w-full">
+        <Link href="/auth/login">시작하기</Link>
+      </Button>
+    );
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+
+  if (data?.claims) {
+    return (
+      <Button asChild className="w-full">
+        <Link href={DEFAULT_AFTER_LOGIN}>내 이벤트로 이동</Link>
+      </Button>
+    );
+  }
+
+  return (
+    <GoogleSignInButton next={DEFAULT_AFTER_LOGIN} label="Google로 시작하기" />
+  );
+}
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center">
-      <div className="flex w-full flex-1 flex-col items-center gap-20">
-        <nav className="flex h-16 w-full justify-center border-b border-b-foreground/10">
-          <div className="flex w-full max-w-5xl items-center justify-between p-3 px-5 text-sm">
-            <div className="flex items-center gap-5 font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
-                <AuthButton />
-              </Suspense>
-            )}
-          </div>
-        </nav>
-        <div className="flex max-w-5xl flex-1 flex-col gap-20 p-5">
-          <Hero />
-          <main className="flex flex-1 flex-col gap-6 px-4">
-            <h2 className="mb-4 text-xl font-medium">Next steps</h2>
-            {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-          </main>
-        </div>
-
-        <footer className="mx-auto flex w-full items-center justify-center gap-8 border-t py-16 text-center text-xs">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
+    <div className="flex min-h-svh flex-col">
+      <header className="mx-auto flex h-14 w-full items-center justify-between px-4">
+        <Link href="/" className="font-semibold">
+          모임 이벤트
+        </Link>
+        <ThemeSwitcher />
+      </header>
+      <main className="mx-auto flex w-full flex-1 flex-col justify-center gap-8 px-4 pb-16">
+        <div className="flex flex-col gap-3 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">
+            공지, 참석, 카풀, 정산을
+            <br />
+            링크 하나로
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            카톡방 수작업 없이 모임 이벤트를 만들고, 링크로 초대하고, 끝까지
+            정산하세요.
           </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
+        </div>
+        <Suspense
+          fallback={
+            <Button className="w-full" disabled>
+              불러오는 중...
+            </Button>
+          }
+        >
+          <StartButton />
+        </Suspense>
+      </main>
+    </div>
   );
 }
