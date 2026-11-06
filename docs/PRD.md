@@ -283,7 +283,7 @@
 
 ### 🎨 스타일링 & UI
 
-- **Tailwind CSS 3** - 현재 프로젝트 설정 유지
+- **Tailwind CSS 4** - `tailwind.config` 없이 `app/globals.css`로 설정, shadcn/ui 기본 스타일 사용
 - **shadcn/ui** - 컴포넌트 라이브러리
 - **Lucide React** - 아이콘
 
