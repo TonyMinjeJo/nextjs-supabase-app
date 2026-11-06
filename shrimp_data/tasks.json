@@ -1,0 +1,815 @@
+{
+  "tasks": [
+    {
+      "id": "15abf7d1-98ce-4764-9963-0c32bcb29c42",
+      "name": "의존성 및 shadcn Tabs 준비",
+      "description": "zod를 npm install로 설치하고 shadcn CLI로 Tabs 컴포넌트를 components/ui/tabs.tsx에 추가한다. react-hook-form은 설치하지 않는다(Task 004). components/ui 파일은 직접 수정하지 않는다.",
+      "notes": "테스트 러너 도입 금지. components/ui 직접 대규모 수정 금지.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:24:12.424Z",
+      "relatedFiles": [
+        {
+          "path": "package.json",
+          "type": "TO_MODIFY",
+          "description": "zod 의존성 추가"
+        },
+        {
+          "path": "components/ui/tabs.tsx",
+          "type": "CREATE",
+          "description": "shadcn Tabs"
+        },
+        {
+          "path": "components.json",
+          "type": "REFERENCE",
+          "description": "shadcn 설정"
+        }
+      ],
+      "implementationGuide": "1) npm install zod 실행. 2) shadcn MCP 또는 npx shadcn@latest add tabs 실행. 3) package.json과 package-lock.json 변경 확인. 4) npm run check-all 실행.",
+      "verificationCriteria": "package.json에 zod가 있고 components/ui/tabs.tsx가 존재하며 npm run check-all 통과.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "package.json에 zod ^4.6.7, @radix-ui/react-tabs가 있고 components/ui/tabs.tsx가 존재함. react-hook-form은 미설치. npm run check-all(lint, typecheck, format) 통과, npm run build 통과.",
+      "completedAt": "2026-11-04T14:24:12.410Z"
+    },
+    {
+      "id": "81bc7867-3a78-4535-a68a-142d9007a56c",
+      "name": "인증 정책 및 로그인 복귀 경로 정비",
+      "description": "lib/supabase/proxy.ts의 비로그인 허용 경로에 /e/ 하위(공개 초대)를 추가하되 /events와 오매칭되지 않게 정확히 매칭한다. 보호 경로 리다이렉트 시 원래 경로를 인코딩한 ?next를 부착한다. lib/auth/safe-next.ts에 DEFAULT_AFTER_LOGIN=\"/events\" 상수를 두고 getSafeNext 기본 fallback으로 사용한다. app/auth/login/page.tsx가 searchParams.next를 getSafeNext로 검증해 LoginForm과 GoogleSignInButton에 전달하도록 하고, 이메일 로그인 router.push도 next를 따르게 한다. 변경된 허용 경로를 CLAUDE.md와 shrimp-rules.md에 함께 반영한다.",
+      "notes": "app/protected 처리(삭제 또는 /events 리다이렉트)와 이메일 로그인 UI 유지 여부는 사용자 확인 사항. 기본안: protected는 유지하되 신규 코드가 참조하지 않음.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "15abf7d1-98ce-4764-9963-0c32bcb29c42"
+        }
+      ],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:24:25.564Z",
+      "relatedFiles": [
+        {
+          "path": "lib/supabase/proxy.ts",
+          "type": "TO_MODIFY",
+          "description": "허용 경로와 next 부착",
+          "lineStart": 47,
+          "lineEnd": 60
+        },
+        {
+          "path": "lib/auth/safe-next.ts",
+          "type": "TO_MODIFY",
+          "description": "기본 복귀 경로 상수"
+        },
+        {
+          "path": "components/google-sign-in-button.tsx",
+          "type": "TO_MODIFY",
+          "description": "next 기본값"
+        },
+        {
+          "path": "components/login-form.tsx",
+          "type": "TO_MODIFY",
+          "description": "next prop과 push 경로"
+        },
+        {
+          "path": "app/auth/login/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "searchParams next 전달"
+        },
+        {
+          "path": "app/auth/callback/route.ts",
+          "type": "REFERENCE",
+          "description": "getSafeNext 사용"
+        },
+        {
+          "path": "CLAUDE.md",
+          "type": "TO_MODIFY",
+          "description": "허용 경로 문구"
+        },
+        {
+          "path": "shrimp-rules.md",
+          "type": "TO_MODIFY",
+          "description": "허용 경로 문구"
+        }
+      ],
+      "implementationGuide": "1) proxy.ts: 조건에 pathname.startsWith(\"/e/\") 허용 추가, 리다이렉트 URL에 searchParams.set(\"next\", pathname+search). createServerClient와 getClaims 사이에 코드 삽입 금지, getClaims 유지. 2) safe-next.ts: 상수 export, fallback 기본값 교체. 3) GoogleSignInButton next 기본값을 상수로 교체. 4) login/page.tsx: searchParams Promise를 Suspense 내부 컴포넌트에서 await 후 getSafeNext 적용, LoginForm에 next prop 전달. 5) CLAUDE.md, shrimp-rules.md 허용 경로 문구 수정.",
+      "verificationCriteria": "비로그인으로 /events 접근 시 /auth/login?next=%2Fevents로 이동, /e/abc는 로그인 없이 접근, 로그인 후 next 경로로 복귀, //evil.com 같은 next는 /events로 대체. check-all 통과.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "proxy.ts에 /e/ 하위 공개 허용과 ?next 부착 구현(/events와 오매칭 없음), safe-next.ts에 DEFAULT_AFTER_LOGIN 및 fallback 적용, login/page.tsx가 getSafeNext로 검증해 LoginForm에 전달, 이메일 로그인 router.push(next), GoogleSignInButton 기본값 상수 사용, CLAUDE.md와 shrimp-rules.md 문구 반영. check-all과 build 통과. 브라우저 E2E 리다이렉트 확인은 별도 수행하지 않음.",
+      "completedAt": "2026-11-04T14:24:25.562Z"
+    },
+    {
+      "id": "28f9ce16-a28e-44ff-8af2-77b05e92413d",
+      "name": "공통 앱 헤더와 로그인 영역 레이아웃",
+      "description": "로고, 내 이벤트(/events), 이벤트 만들기(/events/new), 로그아웃을 가진 components/app-header.tsx를 만들고 라우트 그룹 app/(app)/layout.tsx에서 사용한다. 인증 상태 표시는 Suspense 내부 서버 컴포넌트로 처리하고 fallback을 둔다. 기존 LogoutButton을 재사용하며 DeployButton, Hero, tutorial 컴포넌트는 참조하지 않는다. 모바일에서 메뉴가 깨지지 않게 한다.",
+      "notes": "라우트 그룹 (app)은 URL에 영향 없음. /e/[code]도 같은 그룹에 둘지는 헤더가 비로그인에서도 자연스러운지 보고 결정.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "81bc7867-3a78-4535-a68a-142d9007a56c"
+        }
+      ],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:24:52.503Z",
+      "relatedFiles": [
+        {
+          "path": "app/protected/layout.tsx",
+          "type": "REFERENCE",
+          "description": "기존 헤더 패턴"
+        },
+        {
+          "path": "components/auth-button.tsx",
+          "type": "REFERENCE",
+          "description": "인증 표시 패턴"
+        },
+        {
+          "path": "components/logout-button.tsx",
+          "type": "DEPENDENCY",
+          "description": "로그아웃 재사용"
+        },
+        {
+          "path": "components/app-header.tsx",
+          "type": "CREATE",
+          "description": "공통 헤더"
+        },
+        {
+          "path": "app/(app)/layout.tsx",
+          "type": "CREATE",
+          "description": "로그인 영역 레이아웃"
+        }
+      ],
+      "implementationGuide": "1) app/protected/layout.tsx의 nav 구조를 참고해 app-header.tsx 작성(한국어 문구, Tailwind 토큰). 2) async 서버 컴포넌트에서 createClient 후 getClaims로 로그인 여부 확인, 비로그인이면 로그인 링크. 3) app/(app)/layout.tsx에 헤더와 max-w 컨테이너, ThemeSwitcher 포함 여부는 기존 푸터 패턴 따름.",
+      "verificationCriteria": "헤더에 내 이벤트, 이벤트 만들기, 로그아웃이 표시되고 링크가 동작하며 375px 폭에서 줄바꿈 깨짐 없음. 빌드 시 Cache Components 오류 없음.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "components/app-header.tsx에 로고, 내 이벤트, 이벤트 만들기, LogoutButton(재사용), ThemeSwitcher를 두고 app/(app)/layout.tsx에서 사용. (app) 영역은 proxy가 로그인을 보장하므로 서버 인증 조회 없이 정적 렌더링하도록 설계를 단순화해 Suspense 불필요(태스크 설명과 다른 점). Cache Components 빌드 오류 없음, check-all 통과. 375px 시각 확인은 수행하지 않음.",
+      "completedAt": "2026-11-04T14:24:52.501Z"
+    },
+    {
+      "id": "204f3bac-d999-4d8d-9121-669d0b7926d9",
+      "name": "이벤트 라우트 5종 빈 페이지와 홈 정리",
+      "description": "내 이벤트(app/(app)/events/page.tsx), 이벤트 생성(events/new), 이벤트 초대(app/e/[code]/page.tsx), 이벤트 상세(events/[id]), 이벤트 관리(events/[id]/manage) 빈 페이지를 만든다. 동적 params는 Suspense 내부 컴포넌트에서 await한다. 상세에는 공지/참석자/카풀/정산 Tabs 골격과 관리 페이지 이동 링크 자리를 둔다. 초대 페이지는 이벤트 요약 자리표시와 비로그인 시 로그인 버튼(next=/e/{code})을 둔다. app/page.tsx에서 스타터 요소를 제거하고 서비스 소개와 시작 버튼(비로그인 로그인, 로그인 상태 /events)으로 정리한다.",
+      "notes": "더미 데이터와 도메인 타입은 사용하지 않는다(Task 003, 002 이후). 스타터 파일 삭제는 사용자 확인 후.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "28f9ce16-a28e-44ff-8af2-77b05e92413d"
+        }
+      ],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:25:15.324Z",
+      "relatedFiles": [
+        {
+          "path": "app/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "홈 정리"
+        },
+        {
+          "path": "app/(app)/events/page.tsx",
+          "type": "CREATE",
+          "description": "내 이벤트"
+        },
+        {
+          "path": "app/(app)/events/new/page.tsx",
+          "type": "CREATE",
+          "description": "이벤트 생성"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "CREATE",
+          "description": "이벤트 상세와 탭"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "CREATE",
+          "description": "이벤트 관리"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "CREATE",
+          "description": "이벤트 초대"
+        },
+        {
+          "path": "components/ui/tabs.tsx",
+          "type": "DEPENDENCY",
+          "description": "탭"
+        }
+      ],
+      "implementationGuide": "1) 각 page.tsx는 정적 셸 + Suspense 안의 async 컴포넌트에서 params await. 2) 상세: shadcn Tabs 4개 패널에 빈 상태 문구. 3) 초대: getClaims로 로그인 여부 확인(Suspense 내부), 비로그인이면 GoogleSignInButton next 전달. 4) 홈: Hero, DeployButton, tutorial import 제거, 로그인 여부에 따라 버튼 링크 분기. 5) PRD 페이지 목록과 맞는지 확인.",
+      "verificationCriteria": "5개 경로 모두 렌더링, 비로그인 /e/test는 접근 가능하고 나머지는 로그인으로 이동, 홈 버튼 동선 정상. npm run check-all 후 npm run build 통과.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "events, events/new, events/[id], events/[id]/manage, e/[code] 5개 페이지와 정리된 홈(app/page.tsx: 서비스 소개 + 로그인 상태별 시작 버튼) 구현. 동적 params는 Suspense 내부에서 await, 상세에 공지/참석자/카풀/정산 Tabs 골격과 관리 링크, 초대에 요약 자리표시와 next=/e/{code} 로그인 버튼. 프로덕션 서버에서 비로그인 /, /e/test는 200, /events 계열은 /auth/login?next=... 로 307 확인. check-all, build 통과.",
+      "completedAt": "2026-11-04T14:25:15.322Z"
+    },
+    {
+      "id": "7b3bea44-2e2e-4495-83ed-02528bb9e858",
+      "name": "도메인 타입과 상태 유니온 정의",
+      "description": "PRD 데이터 모델 기준으로 lib/types/에 Profile, EventSeries, Event, Participation, Announcement, CarpoolRide, CarpoolPassenger, Expense, SettlementShare 타입과 ParticipationStatus(going|not_going|waitlist), PassengerStatus(pending|accepted|rejected)를 정의하고 index.ts에서 재export한다. 입금 상태(미입금|입금 표시|확인 완료)는 paid_marked와 confirmed에서 파생하는 타입과 헬퍼 타입으로 표현한다.",
+      "notes": "DB 스키마, RLS, Supabase 타입 생성은 범위 제외(Task 006). Task 005-1 이후 보완될 수 있음을 파일 상단 주석에 명시.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "15abf7d1-98ce-4764-9963-0c32bcb29c42"
+        }
+      ],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:24:26.029Z",
+      "relatedFiles": [
+        {
+          "path": "docs/PRD.md",
+          "type": "REFERENCE",
+          "description": "데이터 모델",
+          "lineStart": 187,
+          "lineEnd": 270
+        },
+        {
+          "path": "lib/types/index.ts",
+          "type": "CREATE",
+          "description": "타입 재export"
+        }
+      ],
+      "implementationGuide": "1) 도메인별 파일(event.ts, participation.ts, announcement.ts, carpool.ts, settlement.ts, profile.ts) 작성. 2) 필드명은 PRD의 snake_case를 따르고 날짜는 ISO 문자열 타입으로 통일. 3) 한국어 주석으로 PRD 필드와 대응 명시. 4) index.ts 재export.",
+      "verificationCriteria": "PRD의 9개 모델과 두 상태 유니온이 모두 정의되고 npm run typecheck 통과.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "lib/types에 Profile, EventSeries, Event, Participation, Announcement, CarpoolRide, CarpoolPassenger, Expense, SettlementShare와 ParticipationStatus, PassengerStatus, PaymentStatus 정의, index.ts 재export. typecheck 및 check-all 통과.",
+      "completedAt": "2026-11-04T14:24:26.027Z"
+    },
+    {
+      "id": "b04965cd-b46d-467b-a501-6b212a75ff58",
+      "name": "Zod 입력 스키마와 화면 공유 뷰 모델 타입",
+      "description": "lib/validations/event.ts(제목, 설명, 일시, 장소, 정원 1 이상 정수, 신청 마감은 일시 이전, 선택적 주간 반복 요일과 종료일은 시작일 이후)와 lib/validations/expense.ts(항목명, 금액 양의 정수, 결제자)를 Zod로 작성하고 z.infer 입력 타입을 export한다. lib/types/view-models.ts에 EventCardProps, ParticipantRowProps, RideCardProps, SettlementRowProps 등 화면과 더미 데이터가 공유할 Props 타입을 정의한다.",
+      "notes": "react-hook-form 연동은 Task 004에서. 이 단계는 스키마와 타입만.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "7b3bea44-2e2e-4495-83ed-02528bb9e858"
+        }
+      ],
+      "createdAt": "2026-11-04T14:00:34.024Z",
+      "updatedAt": "2026-11-04T14:24:52.952Z",
+      "relatedFiles": [
+        {
+          "path": "lib/validations/event.ts",
+          "type": "CREATE",
+          "description": "이벤트 생성 스키마"
+        },
+        {
+          "path": "lib/validations/expense.ts",
+          "type": "CREATE",
+          "description": "비용 입력 스키마"
+        },
+        {
+          "path": "lib/types/view-models.ts",
+          "type": "CREATE",
+          "description": "화면 Props 타입"
+        }
+      ],
+      "implementationGuide": "1) 오류 메시지는 한국어. 2) 교차 필드 검증은 superRefine 사용. 3) 날짜 입력은 문자열로 받아 검증. 4) 뷰 모델은 도메인 타입을 조합해 정의.",
+      "verificationCriteria": "유효/무효 입력에 대해 스키마가 기대대로 통과/실패하는지 임시 스크립트로 확인(커밋 금지), 정원 0, 음수 금액, 마감이 일시 이후, 종료일이 시작일 이전이 모두 거부됨. npm run check-all 후 npm run build 통과.",
+      "analysisResult": "ROADMAP Phase 1 완료: 라우트·레이아웃 골격(Task 001)과 도메인 타입·Zod 스키마(Task 002)를 Supabase DB 연동 없이 구축한다. 소스는 루트 app/components/lib, 경로 별칭 @/*, 한국어 문구, 모바일 우선, Cache Components 규칙(동적 데이터는 Suspense 내부), proxy의 getClaims 규칙 유지. 완료 시 npm run check-all 후 npm run build 통과.",
+      "summary": "event.ts, expense.ts에 한국어 오류 메시지의 Zod 스키마와 z.infer 타입을 정의하고 view-models.ts에 EventCardProps, ParticipantRowProps, RideCardProps, SettlementRowProps를 정의. 임시 스크립트로 정원 0, 마감이 일시 이후, 종료일이 시작일 이전, 음수 금액 거부와 유효 입력 통과를 8건 모두 확인(스크립트는 저장소 밖). check-all, build 통과.",
+      "completedAt": "2026-11-04T14:24:52.950Z"
+    },
+    {
+      "id": "a1de1565-75dd-4523-af58-0df41f2b14b4",
+      "name": "공통 컴포넌트 라이브러리와 더미 데이터 모듈",
+      "description": "shadcn CLI로 dialog, select, textarea, sonner를 추가하고(calendar/popover는 반복 종료일에 필요할 때만, 기본은 datetime-local 네이티브 입력), 도메인 컴포넌트 components/event/{event-card, participation-badge, capacity-gauge, empty-state}.tsx와 lib/mocks/(users, events, participations, announcements, carpool, settlement, index) 더미 데이터 및 getMyEvents/getEventById/getEventByCode 등 순수 조회 함수를 만든다. 정산 계산은 lib/settlement.ts 순수 함수(출석자 N분의 1, 나머지 원은 결제자 부담)로 분리한다. app/(app)/layout.tsx와 홈에 모바일 우선 컨테이너 기준(max-w-2xl, px-4)을 적용하고 루트 레이아웃에 Toaster를 배치한다.",
+      "notes": "Supabase 연동 금지. 조회 함수는 Phase 3에서 Supabase 쿼리로 교체하기 쉽게 순수 함수로 두되 반환 타입은 lib/types를 따른다. 테스트 러너 도입 금지.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-04T14:27:36.679Z",
+      "updatedAt": "2026-11-04T14:34:31.263Z",
+      "relatedFiles": [
+        {
+          "path": "lib/types/view-models.ts",
+          "type": "REFERENCE",
+          "description": "공유 Props 타입"
+        },
+        {
+          "path": "lib/types/settlement.ts",
+          "type": "REFERENCE",
+          "description": "PaymentStatus, getPaymentStatus"
+        },
+        {
+          "path": "app/(app)/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "모바일 컨테이너 기준"
+        },
+        {
+          "path": "app/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "Toaster 배치"
+        },
+        {
+          "path": "components/event/event-card.tsx",
+          "type": "CREATE",
+          "description": "이벤트 카드"
+        },
+        {
+          "path": "lib/mocks/index.ts",
+          "type": "CREATE",
+          "description": "더미 데이터 진입점"
+        },
+        {
+          "path": "lib/settlement.ts",
+          "type": "CREATE",
+          "description": "N분의 1 계산"
+        }
+      ],
+      "implementationGuide": "1) npx shadcn@latest add dialog select textarea sonner 실행 후 package.json 변경 확인, components/ui 직접 수정 금지. 2) components/event/*는 view-models.ts의 EventCardProps 등을 재사용하고 Badge/Card를 래핑, 색상은 CSS 토큰만 사용. 3) lib/mocks는 lib/types 타입으로 선언, 현재 사용자 ID 상수(CURRENT_USER_ID)와 주최자/참여자/대기/정원초과/지난 이벤트/잘못된 코드 케이스를 모두 포함. 4) lib/settlement.ts에 calcShares(expenses, attendeeIds) 순수 함수. 5) 한국어 주석, 큰따옴표, 80자.",
+      "verificationCriteria": "dialog/select/textarea/sonner가 components/ui에 존재, components/event 4종과 lib/mocks, lib/settlement.ts 존재, 정산 계산이 입력값 수기 계산과 일치(임시 스크립트로 확인, 커밋 금지), npm run check-all 및 npm run build 통과.",
+      "analysisResult": "ROADMAP Phase 2 완료: Supabase DB 없이 lib/types와 lib/mocks 더미 데이터만으로 주최자/참여자 전체 플로우 UI를 끝까지 체험 가능하게 만든다. 소스는 저장소 루트(app/components/lib), 경로 별칭 @/*, 한국어 문구, 모바일 우선(max-w-2xl, 터치 타깃 44px), Cache Components 규칙(params와 동적 데이터는 Suspense 내부), components/ui 직접 수정 금지(shadcn CLI), 테스트 러너 도입 금지, Auth 유지. 의존 방향은 lib/types, lib/mocks, lib/settlement(순수 계산), components/event, app 페이지의 단방향. 인터랙션은 최소 범위의 use client 컴포넌트로 분리한다. 각 Task 완료 시 npm run check-all 후 npm run build 통과. Task 005-1은 Phase 3 게이트로 타입과 PRD 데이터 모델을 확정한다.",
+      "summary": "shadcn으로 dialog, select, textarea, sonner 추가. components/event/{event-card, participation-badge, capacity-gauge, empty-state} 4종, lib/mocks(users, events, participations, announcements, carpool, settlement, index), lib/settlement.ts(calcShares, sumSharesByUser), lib/format.ts 작성. 루트 레이아웃에 Toaster 배치. 임시 스크립트로 정산(50000/23000 비용, 3명 출석)이 수기 계산과 일치함을 확인(스크립트는 저장소 밖). 추가로 코드 리뷰 H1(getSafeNext가 ?next=a&next=b에서 TypeError)과 스타터 title/lang 수정. check-all, build 통과. 모바일 컨테이너는 루트의 기존 500px 열을 그대로 사용.",
+      "completedAt": "2026-11-04T14:34:31.261Z"
+    },
+    {
+      "id": "f3f58979-2ebc-40d8-988f-23c438dac43d",
+      "name": "내 이벤트 목록과 이벤트 생성 폼 UI",
+      "description": "react-hook-form과 @hookform/resolvers를 설치하고 docs/guides/forms-react-hook-form.md 규칙에 맞춰 EventForm(클라이언트)을 구현한다. eventFormSchema를 재사용해 제목/설명/일시/장소/정원/신청 마감과 주간 반복(토글 시 요일, 종료일) 필드를 제공한다. 내 이벤트 페이지는 주최/참여 구분과 예정/지난 구분, 참석 상태 뱃지를 보여주고, 공유 링크 복사 버튼(navigator.clipboard + sonner toast, 실패 시 대체 안내)과 복제 진입(/events/new?from={id}로 값 미리 채움)을 둔다. 제출은 DB 없이 toast 후 /events로 이동하는 더미 동작이다.",
+      "notes": "보호 경로는 Google 로그인이 필요해 Playwright로 직접 볼 수 없으므로 시각 확인은 Task 005-1에서 수행한다. 인증 우회 코드를 임의로 만들지 않는다. components/ui 직접 수정 금지.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "a1de1565-75dd-4523-af58-0df41f2b14b4"
+        }
+      ],
+      "createdAt": "2026-11-04T14:27:36.679Z",
+      "updatedAt": "2026-11-04T14:37:22.936Z",
+      "relatedFiles": [
+        {
+          "path": "lib/validations/event.ts",
+          "type": "DEPENDENCY",
+          "description": "폼 스키마"
+        },
+        {
+          "path": "app/(app)/events/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "내 이벤트 목록"
+        },
+        {
+          "path": "app/(app)/events/new/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "이벤트 생성"
+        },
+        {
+          "path": "components/event/event-form.tsx",
+          "type": "CREATE",
+          "description": "생성 폼"
+        },
+        {
+          "path": "components/event/share-link-button.tsx",
+          "type": "CREATE",
+          "description": "링크 복사"
+        },
+        {
+          "path": "shrimp-rules.md",
+          "type": "TO_MODIFY",
+          "description": "폼 라이브러리 문구"
+        }
+      ],
+      "implementationGuide": "1) npm install react-hook-form @hookform/resolvers. 2) components/event/event-form.tsx, share-link-button.tsx 작성, searchParams.from은 Suspense 내부에서 await 후 mocks로 기본값 구성. 3) app/(app)/events/page.tsx를 mocks의 getMyEvents와 EventCard로 구성, Tabs로 주최/참여, 예정/지난 구분. 4) shrimp-rules.md와 CLAUDE.md의 react-hook-form 미설치 문구를 설치됨으로 갱신. 5) 에러 메시지는 Zod 한국어 메시지 그대로 노출.",
+      "verificationCriteria": "내 이벤트에 주최/참여, 예정/지난, 뱃지가 표시되고, 생성 폼이 정원 0, 마감이 일시 이후, 종료일이 시작일 이전 입력을 필드별 오류로 거부하며, 링크 복사 버튼과 복제 진입이 동작한다. npm run check-all 및 npm run build 통과.",
+      "analysisResult": "ROADMAP Phase 2 완료: Supabase DB 없이 lib/types와 lib/mocks 더미 데이터만으로 주최자/참여자 전체 플로우 UI를 끝까지 체험 가능하게 만든다. 소스는 저장소 루트(app/components/lib), 경로 별칭 @/*, 한국어 문구, 모바일 우선(max-w-2xl, 터치 타깃 44px), Cache Components 규칙(params와 동적 데이터는 Suspense 내부), components/ui 직접 수정 금지(shadcn CLI), 테스트 러너 도입 금지, Auth 유지. 의존 방향은 lib/types, lib/mocks, lib/settlement(순수 계산), components/event, app 페이지의 단방향. 인터랙션은 최소 범위의 use client 컴포넌트로 분리한다. 각 Task 완료 시 npm run check-all 후 npm run build 통과. Task 005-1은 Phase 3 게이트로 타입과 PRD 데이터 모델을 확정한다.",
+      "summary": "react-hook-form, @hookform/resolvers 설치. EventForm(제목/설명/일시/장소/정원/마감/주간 반복 토글+요일+종료일), ShareLinkButton(clipboard + sonner, 실패 시 링크 안내), 내 이벤트(전체/주최/참여 탭, 예정/지난 구분, 참석·주최 뱃지, 링크 복사, 복제 진입 /events/new?from=). Cache Components 규칙에 맞게 connection() 후 현재 시각 사용. 코드 리뷰 지적(빈 문자열 마감, 날짜 형식/실존 검증, 마감=시작 경계)을 반영해 event.ts 스키마 보강, 임시 스크립트로 13건 검증 통과. shrimp-rules.md 문구 갱신. check-all, build 통과. 로그인 필요 화면의 실제 렌더링은 Task 4에서 확인 예정(미확인).",
+      "completedAt": "2026-11-04T14:37:22.934Z"
+    },
+    {
+      "id": "db94f670-0b19-4f6d-8fb0-f63e4fc59368",
+      "name": "이벤트 초대·상세·관리 UI와 전체 플로우 연결",
+      "description": "이벤트 초대(/e/[code])에 요약, 참석/불참 버튼(클라이언트 상태), 정원 초과 시 대기 안내, 잘못된 코드 notFound 화면을 구현한다. 이벤트 상세 4개 탭(공지는 고정 우선 정렬, 참석자는 정원 게이지와 대기 순번, 카풀은 남은 좌석과 탑승 신청/수락 UI와 미배정 참석자, 정산은 내 분담액과 입금 표시 버튼과 참여자에게만 보이는 송금 계좌)을 주최자/참여자 뷰로 분기한다. 이벤트 관리 페이지에는 출석 체크리스트, 비용 입력(expenseFormSchema), 1인당 금액/입금 상태 표(SettlementRowProps)와 입금 확인을 구현하고, 주최자 전용 화면은 참여자가 접근하면 안내 후 상세로 돌려보낸다. 모든 상호작용은 더미 데이터 위 클라이언트 상태로 끝까지 체험 가능해야 한다.",
+      "notes": "정원 초과 시 대기, 마감 후 차단은 UI 안내까지만 구현하고 서버 로직은 Phase 3. 파일이 커지면 탭 단위 컴포넌트로 분할. 보호 경로의 시각 확인은 Task 005-1.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "f3f58979-2ebc-40d8-988f-23c438dac43d"
+        }
+      ],
+      "createdAt": "2026-11-04T14:27:36.679Z",
+      "updatedAt": "2026-11-04T14:40:14.944Z",
+      "relatedFiles": [
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "초대 페이지"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "상세 4탭"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "관리"
+        },
+        {
+          "path": "lib/settlement.ts",
+          "type": "DEPENDENCY",
+          "description": "정산 계산"
+        },
+        {
+          "path": "lib/validations/expense.ts",
+          "type": "DEPENDENCY",
+          "description": "비용 폼 스키마"
+        },
+        {
+          "path": "components/event",
+          "type": "CREATE",
+          "description": "탭별 컴포넌트"
+        }
+      ],
+      "implementationGuide": "1) 페이지는 정적 셸 + Suspense 안에서 params await 유지, 데이터는 lib/mocks 조회 함수. 2) 상호작용 컴포넌트만 use client로 분리: rsvp-buttons, participant-list, ride-card, expense-form, settlement-table. 3) 주최자 여부는 CURRENT_USER_ID와 event.host_id 비교. 4) 정산 수치는 lib/settlement.ts 재사용. 5) 상태 문구(미입금/입금 표시/확인 완료)와 뱃지를 PaymentStatus에서 파생. 6) 로딩 fallback과 빈 상태는 EmptyState 재사용.",
+      "verificationCriteria": "비로그인으로 /e/{더미코드}가 요약과 로그인 유도를 보이고 잘못된 코드는 안내 화면, 상세 4탭이 주최자/참여자에 따라 다르게 보이며, 관리의 비용 추가가 1인당 금액과 입금 상태 표에 즉시 반영되고 금액이 수기 계산과 일치한다. npm run check-all 및 npm run build 통과, /e/ 공개 경로는 서버 기동 후 curl 또는 Playwright로 확인.",
+      "analysisResult": "ROADMAP Phase 2 완료: Supabase DB 없이 lib/types와 lib/mocks 더미 데이터만으로 주최자/참여자 전체 플로우 UI를 끝까지 체험 가능하게 만든다. 소스는 저장소 루트(app/components/lib), 경로 별칭 @/*, 한국어 문구, 모바일 우선(max-w-2xl, 터치 타깃 44px), Cache Components 규칙(params와 동적 데이터는 Suspense 내부), components/ui 직접 수정 금지(shadcn CLI), 테스트 러너 도입 금지, Auth 유지. 의존 방향은 lib/types, lib/mocks, lib/settlement(순수 계산), components/event, app 페이지의 단방향. 인터랙션은 최소 범위의 use client 컴포넌트로 분리한다. 각 Task 완료 시 npm run check-all 후 npm run build 통과. Task 005-1은 Phase 3 게이트로 타입과 PRD 데이터 모델을 확정한다.",
+      "summary": "초대(/e/[code]): 이벤트 요약, 정원 게이지, 참석/불참(정원 초과 시 대기 안내·마감 안내), 비로그인 로그인 유도, 잘못된 코드 notFound(app/not-found.tsx). 상세: 공지(주최자 작성/삭제/고정, 고정 우선), 참석자(대기 순번), 카풀(운행 등록·탑승 신청·수락/거절·좌석 초과 방지·미배정 목록), 정산(내 분담액·입금했어요·참여자에게만 계좌)을 주최자/참여자로 분기. 관리: 출석 체크, 비용 추가(expenseFormSchema), 1인당 금액·나머지 결제자 부담 표시, 입금 확인, 비주최자 접근 시 안내. 모든 상호작용은 클라이언트 더미 상태. check-all, build 통과. 프로덕션 서버에서 /e/futsal1114, /e/board1205는 요약+로그인 유도, /e/nope는 안내 화면, /events 계열은 로그인으로 307 확인. 미확인: 로그인이 필요한 상세·관리 화면의 실제 렌더링과 상호작용(Task 4에서 확인), 정산 UI 합계의 화면 대조.",
+      "completedAt": "2026-11-04T14:40:14.942Z"
+    },
+    {
+      "id": "bc29169c-19d9-4168-b909-ea8f538dadba",
+      "name": "UI 검토 및 보완과 타입·PRD 데이터 모델 확정",
+      "description": "더미 데이터로 주최자/참여자 전체 플로우(생성, 링크 공유, 참석, 카풀, 출석, 정산)를 데스크톱과 모바일 뷰포트에서 직접 확인한다. 로그인이 필요한 경로는 사용자에게 확인한 방식(예: 사용자가 브라우저에서 직접 Google 로그인한 세션 사용)으로 접근하며 임의의 인증 우회 코드는 만들지 않는다. 누락 필드, 불필요 단계, 상태 표시 혼선을 목록화해 우선순위를 정하고, 결정 사항을 UI와 lib/mocks에 반영한 뒤 lib/types와 Zod 스키마, docs/PRD.md 데이터 모델에 반영해 확정한다. 확정 후 docs/ROADMAP.md 진행 상태를 갱신한다.",
+      "notes": "이 Task가 Phase 3(Task 006)의 게이트다. 사용자 확인 없이 PRD 데이터 모델의 필드를 변경하지 않는다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "db94f670-0b19-4f6d-8fb0-f63e4fc59368"
+        }
+      ],
+      "createdAt": "2026-11-04T14:27:36.679Z",
+      "updatedAt": "2026-11-04T14:50:02.943Z",
+      "relatedFiles": [
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "데이터 모델 확정"
+        },
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "진행 상태"
+        },
+        {
+          "path": "lib/types",
+          "type": "TO_MODIFY",
+          "description": "도메인 타입 확정"
+        },
+        {
+          "path": "lib/validations",
+          "type": "TO_MODIFY",
+          "description": "스키마 확정"
+        }
+      ],
+      "implementationGuide": "1) 착수 전 AskUserQuestion으로 보호 경로 접근 방식(수동 로그인 세션 등)을 확인. 2) Playwright MCP로 375px, 1280px 뷰포트에서 플로우를 따라 스크린샷과 콘솔 오류 확인. 3) 보완 목록을 표로 정리해 사용자에게 우선순위 확인. 4) 반영 후 lib/types, lib/validations, lib/types/view-models.ts, docs/PRD.md 데이터 모델을 함께 수정. 5) /docs:update-roadmap으로 진행 상황 갱신.",
+      "verificationCriteria": "두 뷰포트에서 전체 플로우를 끝까지 수행하고 콘솔 오류가 없으며, 보완 목록과 처리 결과가 기록되고, lib/types와 PRD 데이터 모델이 일치한다. npm run check-all 및 npm run build 통과.",
+      "analysisResult": "ROADMAP Phase 2 완료: Supabase DB 없이 lib/types와 lib/mocks 더미 데이터만으로 주최자/참여자 전체 플로우 UI를 끝까지 체험 가능하게 만든다. 소스는 저장소 루트(app/components/lib), 경로 별칭 @/*, 한국어 문구, 모바일 우선(max-w-2xl, 터치 타깃 44px), Cache Components 규칙(params와 동적 데이터는 Suspense 내부), components/ui 직접 수정 금지(shadcn CLI), 테스트 러너 도입 금지, Auth 유지. 의존 방향은 lib/types, lib/mocks, lib/settlement(순수 계산), components/event, app 페이지의 단방향. 인터랙션은 최소 범위의 use client 컴포넌트로 분리한다. 각 Task 완료 시 npm run check-all 후 npm run build 통과. Task 005-1은 Phase 3 게이트로 타입과 PRD 데이터 모델을 확정한다.",
+      "summary": "사용자가 Playwright 창에서 직접 Google 로그인한 세션으로 375px에서 내 이벤트, 링크 복사, 복제 진입, 생성 폼 검증(정원 0, 일시 누락), 이벤트 관리(출석 변경 시 재계산 5750/12500/18250/18250 일치), 카풀 탭, 참여자 정산(9,000원, 입금했어요), 주최자 상세를 확인. 1280px은 주최자 상세만 확인(500px 열 중앙 정렬). 콘솔 오류는 스크린샷 부산물(hydration)과 의도한 /protected 404뿐. 수정: 토스트 배경 투명, 더미 날짜 요일, 카풀 뱃지/이름 줄바꿈, 입금 뱃지 폭. 사용자 결정 반영: participations/announcements created_at 추가와 KST(+09:00) 규칙(lib/datetime.ts, PRD 반영), 입금 확인 후 출석·비용 수정 잠금(Playwright로 잠금 확인), /protected와 components/tutorial 삭제 및 참조 정리. 송금 계좌·입금 상태 단위 등은 Phase 3로 이월(ROADMAP 기록). check-all, build 통과. 미확인: 데스크톱에서 생성/관리/카풀/정산 전 화면, 공지 작성·고정 동작, 카풀 운행 등록 Dialog와 수락/거절 상호작용 직접 조작.",
+      "completedAt": "2026-11-04T14:50:02.941Z"
+    },
+    {
+      "id": "4b866397-1cb0-4684-9ac4-39db206d09f1",
+      "name": "루트 폭 제한 해제와 페이지 폭 정책 컨테이너 도입",
+      "description": "app/layout.tsx의 max-w-[500px] 래퍼(그림자 포함)를 제거하고, 폭 정책을 한 곳에서 관리하는 컨테이너(예: components/page-container.tsx, 기본 max-w-[500px] 모바일 열, wide 옵션 lg:max-w-5xl)를 만든다. 홈, app/auth/*, app/e/[code], not-found, events 목록, events/new는 기존처럼 500px 열로 유지하고, events/[id]와 events/[id]/manage만 wide를 쓸 수 있게 연결한다. components/ui는 수정하지 않는다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-05T15:15:18.613Z",
+      "updatedAt": "2026-11-05T15:21:56.468Z",
+      "relatedFiles": [
+        {
+          "path": "app/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "500px 래퍼 제거"
+        },
+        {
+          "path": "app/(app)/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "main 컨테이너를 폭 정책에 맞게 조정"
+        },
+        {
+          "path": "components/app-header.tsx",
+          "type": "TO_MODIFY",
+          "description": "헤더 폭을 컨테이너와 정렬"
+        },
+        {
+          "path": "components/page-container.tsx",
+          "type": "CREATE",
+          "description": "폭 정책 컨테이너"
+        }
+      ],
+      "implementationGuide": "1) app/layout.tsx:37-38 래퍼 확인 후 폭 제한과 그림자 제거. 2) PageContainer(wide?: boolean) 작성: mx-auto w-full max-w-[500px], wide면 lg:max-w-5xl. 3) 홈(app/page.tsx), app/auth 레이아웃/페이지, app/e/[code]/page.tsx, app/not-found.tsx, (app)/layout.tsx의 main 및 헤더 영역에 적용해 데스크톱 모양을 기존과 동일하게 유지. 4) AppHeader 폭도 컨테이너와 정렬. 5) npm run dev로 1280px에서 홈, 로그인, 초대, 내 이벤트, 생성 화면이 이전과 같은 500px 열인지 확인.",
+      "verificationCriteria": "1280px에서 홈, 로그인, 초대, 내 이벤트, 생성, 404 화면이 변경 전과 같은 500px 중앙 열로 보이고 375px 레이아웃에 변화가 없다. 폭 정책은 PageContainer 한 곳에서 제어되며 components/ui 파일은 수정되지 않았다. npm run check-all 통과.",
+      "analysisResult": "Task 005-2: 주최자 관리 화면과 이벤트 상세를 lg 이상에서 넓게 표시하는 데스크톱 레이아웃 보완. 루트 app/layout.tsx의 max-w-[500px] 래퍼가 선행 장애물이라 폭 정책 컨테이너를 도입하고, 기존 화면은 500px 유지, manage와 events/[id]만 wide 허용. 더미 데이터와 모바일 레이아웃 불변, components/ui 미수정, 새 역할/대시보드/DB 연동 없음. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "루트 500px 래퍼를 제거하고 PageContainer/WidePage 폭 정책을 도입했다. 기존 화면은 500px 열을 유지하고, check-all과 build가 통과했으며 사용자가 직접 확인했다.",
+      "completedAt": "2026-11-05T15:21:56.466Z"
+    },
+    {
+      "id": "c0bc89e0-942d-46e4-a8a9-e38702e3f142",
+      "name": "이벤트 관리 화면 데스크톱 2열 레이아웃과 정산 테이블",
+      "description": "components/event/manage-board.tsx를 lg 이상에서 2열 grid로 바꾼다. 좌측 열은 출석 체크와 비용(목록+추가 폼), 우측 열은 정산(lg:sticky 고려). 정산은 모바일에서 기존 ul 카드 목록(lg:hidden)을 유지하고 lg 이상에서는 이름/분담액/입금 상태/액션 열의 테이블로 같은 totals, payments, confirmPayment 데이터로 렌더링한다. manage/page.tsx는 wide 컨테이너를 사용한다. 계산 로직은 새로 만들지 않고 formatWon, PaymentBadge, calcShares/sumSharesByUser를 재사용한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "4b866397-1cb0-4684-9ac4-39db206d09f1"
+        }
+      ],
+      "createdAt": "2026-11-05T15:15:18.613Z",
+      "updatedAt": "2026-11-05T15:22:02.575Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/manage-board.tsx",
+          "type": "TO_MODIFY",
+          "description": "2열 레이아웃과 정산 테이블"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "wide 컨테이너 적용"
+        }
+      ],
+      "implementationGuide": "1) manage/page.tsx 바깥을 wide PageContainer로 감싼다. 2) ManageBoard 최상위를 flex-col에서 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8로 변경하고 locked 안내는 전체 폭(lg:col-span-2). 3) 정산 section을 우측 열로 두고 lg:sticky lg:top-20. 4) 정산 행 렌더링을 모바일 카드와 lg 테이블로 분기하되 입금 확인 버튼(h-11)과 보낼 금액 없음 표시 로직을 동일하게 유지. 5) 1280px와 375px에서 e4(내가 주최)와 e1 관리 화면 확인.",
+      "verificationCriteria": "1280px의 /events/e4/manage에서 출석·비용이 좌측, 정산 테이블이 우측에 보이고 입금 확인 동작과 잠금(입금 확인 시 출석·비용 비활성) 동작이 이전과 같다. 375px에서는 기존 단일 열과 카드형 정산 목록이 그대로다. 참여자(e2)가 접근하면 기존 안내 화면이 나온다. npm run check-all 통과.",
+      "analysisResult": "Task 005-2: 주최자 관리 화면과 이벤트 상세를 lg 이상에서 넓게 표시하는 데스크톱 레이아웃 보완. 루트 app/layout.tsx의 max-w-[500px] 래퍼가 선행 장애물이라 폭 정책 컨테이너를 도입하고, 기존 화면은 500px 유지, manage와 events/[id]만 wide 허용. 더미 데이터와 모바일 레이아웃 불변, components/ui 미수정, 새 역할/대시보드/DB 연동 없음. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "ManageBoard를 lg 이상 2열로 바꾸고 정산을 테이블로 표시했다. 모바일 카드 목록과 입금 확인·잠금 동작을 유지했고, check-all과 build 통과, 사용자가 직접 확인했다.",
+      "completedAt": "2026-11-05T15:22:02.573Z"
+    },
+    {
+      "id": "04b7a9dc-b207-4821-b9c3-755105433141",
+      "name": "이벤트 상세 주최자 뷰 데스크톱 폭 조정",
+      "description": "app/(app)/events/[id]/page.tsx가 lg 이상에서 wide 컨테이너를 쓰도록 하고, 헤더 요약(제목, 일시, 장소, 정원 게이지, 링크 복사·이벤트 관리 버튼)과 탭 영역이 넓은 화면에서 한 화면에 어색하지 않게 들어오도록 최소 변경으로 배치한다. 참여자 뷰와 모바일 레이아웃은 바뀌지 않아야 하며 settlement-panel 등 탭 내용 컴포넌트는 필요한 경우에만 수정한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "4b866397-1cb0-4684-9ac4-39db206d09f1"
+        }
+      ],
+      "createdAt": "2026-11-05T15:15:18.613Z",
+      "updatedAt": "2026-11-05T15:22:03.031Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "wide 컨테이너와 lg 레이아웃"
+        },
+        {
+          "path": "components/event/settlement-panel.tsx",
+          "type": "REFERENCE",
+          "description": "넓은 폭에서 깨지는지 확인"
+        }
+      ],
+      "implementationGuide": "1) events/[id]/page.tsx를 wide PageContainer로 감싼다. 2) lg에서 헤더 요약을 좌측 고정 폭 열, 탭을 우측 넓은 영역으로 두는 lg:grid lg:grid-cols-[18rem_1fr] 등 최소 변경 레이아웃 적용(참여자 뷰도 같은 구조를 공유하되 모바일은 단일 열). 3) 탭 내부 카풀 카드, 참석자 목록이 넓은 폭에서 과하게 늘어나지 않는지 확인하고 필요하면 내부 max-w 조정. 4) e1(주최), e2(참여) 상세를 1280px와 375px에서 확인.",
+      "verificationCriteria": "1280px의 /events/e1에서 헤더 요약과 탭이 나란히 보이고 /events/e2(참여자)도 깨지지 않는다. 375px는 변경 전과 같은 단일 열이다. 4개 탭의 상호작용(카풀 신청, 입금했어요 등)이 이전과 동일하게 동작한다. npm run check-all 통과.",
+      "analysisResult": "Task 005-2: 주최자 관리 화면과 이벤트 상세를 lg 이상에서 넓게 표시하는 데스크톱 레이아웃 보완. 루트 app/layout.tsx의 max-w-[500px] 래퍼가 선행 장애물이라 폭 정책 컨테이너를 도입하고, 기존 화면은 500px 유지, manage와 events/[id]만 wide 허용. 더미 데이터와 모바일 레이아웃 불변, components/ui 미수정, 새 역할/대시보드/DB 연동 없음. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "이벤트 상세를 주최자일 때만 lg 이상에서 좌측 요약, 우측 탭으로 넓혔다. 참여자 뷰와 모바일은 불변이며 check-all과 build 통과, 사용자가 직접 확인했다.",
+      "completedAt": "2026-11-05T15:22:03.029Z"
+    },
+    {
+      "id": "031ff608-a648-4636-bfc0-b93e41c40991",
+      "name": "데스크톱·모바일 회귀 검증과 ROADMAP 005-2 완료 반영",
+      "description": "1280px와 375px 두 뷰포트에서 영향받은 모든 화면을 확인하고 Task 005-2를 ROADMAP.md에서 완료로 표시한다. 로그인이 필요한 화면은 사용자가 브라우저에서 직접 Google 로그인한 세션으로만 접근하며 인증 우회 코드는 만들지 않는다. 확인 대상: 홈, 로그인, 초대(/e/futsal1114), 내 이벤트, 생성, 상세(e1,e2), 관리(e4)와 참여자 접근 안내(e2/manage). 이후 CLAUDE.md 체크리스트대로 npm run check-all, npm run build를 순서대로 실행한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "c0bc89e0-942d-46e4-a8a9-e38702e3f142"
+        },
+        {
+          "taskId": "04b7a9dc-b207-4821-b9c3-755105433141"
+        }
+      ],
+      "createdAt": "2026-11-05T15:15:18.613Z",
+      "updatedAt": "2026-11-05T15:22:11.771Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 005-2 완료 표시"
+        }
+      ],
+      "implementationGuide": "1) npm run dev 후 Playwright MCP 또는 사용자 직접 확인으로 1280px/375px 스크린샷 비교. 2) 발견된 어긋남 수정. 3) npm run check-all 통과 후 npm run build 통과 확인, 실패 시 원인 수정 후 처음부터 재실행하고 결과를 숨기지 않고 보고. 4) docs/ROADMAP.md의 Task 005-2에 완료 표시와 검토 결과 요약 추가.",
+      "verificationCriteria": "대상 화면의 1280px/375px 확인 결과가 기록되고 회귀가 없다. npm run check-all과 npm run build가 모두 통과한다. ROADMAP.md의 Task 005-2가 완료로 표시된다.",
+      "analysisResult": "Task 005-2: 주최자 관리 화면과 이벤트 상세를 lg 이상에서 넓게 표시하는 데스크톱 레이아웃 보완. 루트 app/layout.tsx의 max-w-[500px] 래퍼가 선행 장애물이라 폭 정책 컨테이너를 도입하고, 기존 화면은 500px 유지, manage와 events/[id]만 wide 허용. 더미 데이터와 모바일 레이아웃 불변, components/ui 미수정, 새 역할/대시보드/DB 연동 없음. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "npm run check-all과 npm run build를 직접 실행해 통과했고, 사용자가 로그인 세션에서 1280px/375px 화면을 확인해 이상이 없음을 확인했다. ROADMAP Task 005-2를 완료로 표시했다.",
+      "completedAt": "2026-11-05T15:22:11.769Z"
+    },
+    {
+      "id": "3f66830c-a37f-4429-ab5a-f19260c847d1",
+      "name": "admin 역할 모델·더미 데이터·집계 헬퍼 추가",
+      "description": "lib/types/profile.ts의 Profile에 role('user'|'admin')을 추가하고 lib/mocks/users.ts 사용자에 role을 지정한다(u1은 admin). lib/mocks/admin.ts에 대시보드 통계(전체 이벤트, 예정/지난, 사용자 수, 평균 참석률, 정산 진행 이벤트 수, 입금 미확인 건수)와 이벤트/사용자 표 행 집계 헬퍼를 만들고 기존 getGoingCount, getSettlementRows, getInitialPaymentStatus를 재사용한다. docs/PRD.md 데이터 모델에 profiles.role을 반영한다.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "relatedFiles": [
+        {
+          "path": "lib/types/profile.ts",
+          "type": "TO_MODIFY",
+          "description": "role 추가"
+        },
+        {
+          "path": "lib/mocks/users.ts",
+          "type": "TO_MODIFY",
+          "description": "role 지정, isAdmin"
+        },
+        {
+          "path": "lib/mocks/admin.ts",
+          "type": "CREATE",
+          "description": "통계와 표 행 집계"
+        },
+        {
+          "path": "lib/mocks/index.ts",
+          "type": "TO_MODIFY",
+          "description": "admin 재export"
+        },
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "profiles.role 반영"
+        }
+      ],
+      "implementationGuide": "1) Profile 타입에 UserRole 유니온과 role 필드 추가 후 타입 오류가 나는 곳 수정. 2) lib/mocks/users.ts 사용자 role 지정, 현재 사용자 admin 여부 헬퍼(isAdmin) 추가. 3) lib/mocks/admin.ts 작성(순수 함수, 새 계산 로직 최소화), lib/mocks/index.ts에서 재export. 4) docs/PRD.md 데이터 모델 표의 profiles에 role 행 추가. 5) npm run check-all.",
+      "verificationCriteria": "Profile.role 타입이 추가되고 모든 더미 사용자에 role이 있다. admin.ts 집계 값이 더미 데이터와 수동 계산이 일치한다. PRD 데이터 모델에 profiles.role이 반영된다. npm run check-all 통과.",
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+    },
+    {
+      "id": "f89c86ae-c53f-4570-aa66-86ea48535ad4",
+      "name": "admin 라우트 그룹·레이아웃·접근 제어·헤더 링크",
+      "description": "app/(admin)/admin/layout.tsx를 만든다. 데스크톱(lg 이상)은 좌측 사이드바(대시보드, 이벤트, 사용자, 서비스로 돌아가기), lg 미만은 상단 가로 탭, 콘텐츠 max-w-6xl. 현재 사용자가 admin이 아니면 manage 페이지 패턴(안내와 돌아가기 버튼)으로 막는다. components/app-header.tsx에 admin일 때만 관리자 링크를 노출한다. 인증 우회용 토글은 만들지 않는다. 기존 (app) 화면 폭 정책에 회귀가 없어야 한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "3f66830c-a37f-4429-ab5a-f19260c847d1"
+        }
+      ],
+      "createdAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "relatedFiles": [
+        {
+          "path": "app/(admin)/admin/layout.tsx",
+          "type": "CREATE",
+          "description": "admin 레이아웃과 접근 제어"
+        },
+        {
+          "path": "components/app-header.tsx",
+          "type": "TO_MODIFY",
+          "description": "관리자 링크"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "REFERENCE",
+          "description": "접근 거부 UI 패턴"
+        }
+      ],
+      "implementationGuide": "1) app/(admin)/admin/layout.tsx 작성(서버 컴포넌트, 동적 접근은 Suspense 규칙 준수), 사이드바/탭 내비게이션 컴포넌트 분리. 2) 비-admin 안내 UI는 app/(app)/events/[id]/manage/page.tsx 패턴 재사용. 3) app-header에 isAdmin이면 /admin 링크 추가. 4) 임시 빈 페이지 app/(admin)/admin/page.tsx 등 3개 라우트를 만들어 내비게이션이 동작하게 한다. 5) npm run check-all.",
+      "verificationCriteria": "/admin, /admin/events, /admin/users 라우트가 레이아웃 안에서 열린다. lg 이상 사이드바, lg 미만 상단 탭이 보인다. 헤더에 관리자 링크가 admin일 때만 보인다. 비-admin 분기 코드가 있다. (app) 화면의 500px 열이 그대로다. npm run check-all 통과.",
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+    },
+    {
+      "id": "c6b13ee7-5161-4b58-9a85-bc563fc4ce5a",
+      "name": "admin 대시보드 페이지 UI",
+      "description": "app/(admin)/admin/page.tsx에 통계 카드 6개(전체 이벤트, 예정/지난, 전체 사용자, 평균 참석률, 정산 진행 중 이벤트, 입금 미확인 건수)와 최근 이벤트 5건 표를 만든다. 서버 페이지는 Suspense 안에서 lib/mocks/admin.ts를 읽어 props로 전달하고, 표는 375px에서 넘치지 않게 lg 미만 카드형 또는 가로 스크롤로 처리한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "f89c86ae-c53f-4570-aa66-86ea48535ad4"
+        }
+      ],
+      "createdAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "relatedFiles": [
+        {
+          "path": "app/(admin)/admin/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "대시보드"
+        },
+        {
+          "path": "lib/mocks/admin.ts",
+          "type": "REFERENCE",
+          "description": "통계 데이터"
+        }
+      ],
+      "implementationGuide": "1) 통계 카드는 Card 컴포넌트와 formatWon 등 기존 포맷 재사용. 2) 최근 이벤트 표에 CapacityGauge, formatEventDate 재사용, 행에서 /events/[id]로 이동. 3) 빈 상태는 EmptyState. 4) 1280px와 375px 모두 레이아웃 확인.",
+      "verificationCriteria": "대시보드에 카드 6개와 최근 이벤트 5건이 더미 데이터 집계값대로 표시된다. 375px에서 가로 스크롤 없이 읽을 수 있다. npm run check-all 통과.",
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+    },
+    {
+      "id": "d74f6617-9e3b-4217-998a-a07ff7745ab5",
+      "name": "admin 이벤트·사용자 목록 UI",
+      "description": "app/(admin)/admin/events/page.tsx와 users/page.tsx에 표와 검색·필터를 만든다. 이벤트: 제목, 주최자, 일시, 참석/정원 게이지, 정산 상태, 공유 코드 열, 제목·주최자 검색, 예정/지난/전체 필터, 행 클릭 시 /events/[id]. 사용자: 이름, 역할 뱃지, 주최 수, 참여 수, 이름 검색. 검색·필터는 클라이언트 컴포넌트, 서버 페이지는 Suspense 안에서 데이터를 읽어 props로 전달한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "f89c86ae-c53f-4570-aa66-86ea48535ad4"
+        }
+      ],
+      "createdAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "relatedFiles": [
+        {
+          "path": "app/(admin)/admin/events/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "이벤트 목록"
+        },
+        {
+          "path": "app/(admin)/admin/users/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "사용자 목록"
+        },
+        {
+          "path": "components/admin/event-table.tsx",
+          "type": "CREATE",
+          "description": "이벤트 표"
+        },
+        {
+          "path": "components/admin/user-table.tsx",
+          "type": "CREATE",
+          "description": "사용자 표"
+        }
+      ],
+      "implementationGuide": "1) components/admin/event-table.tsx, user-table.tsx 클라이언트 컴포넌트로 검색 상태 관리. 2) 필터 결과 없음은 EmptyState. 3) 정산 상태 표시에 PaymentBadge 재사용. 4) 375px에서 카드형 또는 가로 스크롤. 5) 대시보드 작업과 파일이 겹치지 않으므로 병렬 진행 가능.",
+      "verificationCriteria": "이벤트 5건, 사용자 10명이 표에 표시되고 검색·필터가 동작한다. 결과 없음 문구가 보이고 375px에서 레이아웃이 깨지지 않는다. 행 클릭 이동이 동작한다. npm run check-all 통과.",
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+    },
+    {
+      "id": "7995b815-6881-40a4-8ec3-418595a796fe",
+      "name": "admin 페이지 검증과 ROADMAP 005-3 완료 반영",
+      "description": "npm run check-all 후 npm run build를 순서대로 직접 실행해 통과를 확인한다. 로그인이 필요한 화면은 사용자가 로그인 세션에서 직접 1280px와 375px로 확인하며 인증 우회 코드는 만들지 않는다. 확인 대상: /admin, /admin/events, /admin/users, 헤더 관리자 링크, 회귀(/events, /events/e4/manage, /e/futsal1114). 확인 후 ROADMAP.md Task 005-3을 완료로 표시하고 결과를 기록한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "c6b13ee7-5161-4b58-9a85-bc563fc4ce5a"
+        },
+        {
+          "taskId": "d74f6617-9e3b-4217-998a-a07ff7745ab5"
+        }
+      ],
+      "createdAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 005-3 완료 표시"
+        }
+      ],
+      "implementationGuide": "1) check-all, build 직접 실행. 2) 사용자에게 확인 URL과 볼 점을 안내하고 결과를 받는다. 3) 어긋남은 해당 작업 에이전트에게 수정 지시. 4) ROADMAP 완료 표시와 결과 요약, Phase 3 이월(서버 role 검사, role RLS) 유지 확인.",
+      "verificationCriteria": "check-all과 build가 통과하고 사용자가 1280px/375px 화면과 회귀를 확인했다. ROADMAP Task 005-3이 완료로 표시된다.",
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+    },
+    {
+      "id": "8f1accff-e79a-4804-9c79-5716fef7fc35",
+      "name": "관리자 로그인 라우트·proxy 분기·LoginForm props",
+      "description": "app/(admin-auth)/admin/login/page.tsx를 사이드바 없는 가운데 카드 화면으로 만들고(Google + 이메일/비밀번호, 한국어 관리자 문구, 회원가입 링크 숨김, 일반 로그인 보조 링크), components/login-form.tsx에 title/description/showSignUp/showForgot/footerLink 선택 props를 기본값 동일하게 추가한다. lib/supabase/proxy.ts에 /admin/login 정확 일치 허용, 비로그인 /admin* 은 /admin/login?next=, 로그인 상태의 /admin/login 은 /admin 으로 redirect(세션 쿠키 복사)를 추가한다. next는 /admin 하위만 허용한다. CLAUDE.md, shrimp-rules.md, ROADMAP 005-3 항목을 반영한다.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-11-05T15:39:01.005Z",
+      "updatedAt": "2026-11-05T15:39:01.005Z",
+      "relatedFiles": [
+        {
+          "path": "app/(admin-auth)/admin/login/page.tsx",
+          "type": "CREATE",
+          "description": "관리자 로그인 페이지"
+        },
+        {
+          "path": "components/login-form.tsx",
+          "type": "TO_MODIFY",
+          "description": "선택 props 추가"
+        },
+        {
+          "path": "lib/supabase/proxy.ts",
+          "type": "TO_MODIFY",
+          "description": "허용 경로와 리다이렉트 분기"
+        },
+        {
+          "path": "CLAUDE.md",
+          "type": "TO_MODIFY",
+          "description": "허용 경로 문서"
+        },
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 005-3 항목 추가"
+        }
+      ],
+      "implementationGuide": "1) page.tsx는 app/auth/login/page.tsx 패턴(Suspense 안 searchParams await)을 따르고 getSafeNext(next, '/admin') 후 /admin 하위만 허용. 2) LoginForm props 기본값은 현재 동작과 동일. 3) proxy는 createServerClient와 getClaims 사이에 코드 삽입 금지, redirect 응답에 supabaseResponse.cookies 복사. 4) 문서 갱신. 5) npm run check-all.",
+      "verificationCriteria": "/admin/login 이 사이드바 없이 열리고 proxy 분기가 계획대로이며 /auth/login 화면이 변하지 않는다. (admin) 레이아웃은 수정되지 않았다. npm run check-all 통과.",
+      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영."
+    },
+    {
+      "id": "7b0c29e6-26c5-4936-a45b-e4c5cf532054",
+      "name": "관리자 로그인 Playwright 검증과 ROADMAP 반영",
+      "description": "개발 서버에서 Playwright MCP로 비로그인 시나리오(리다이렉트, 메뉴 없음 1280/375px, 잘못된 로그인 오류, next 보정, /admin/events 보호, 회귀)를 실행하고, 로그인 상태(/admin/login -> /admin, 로그아웃 후 재진입)는 사용자가 직접 Google 로그인한 세션으로 확인한다. npm run check-all 후 npm run build를 직접 실행하고 결과를 그대로 보고한 뒤 ROADMAP Task 005-3 완료를 표시한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "8f1accff-e79a-4804-9c79-5716fef7fc35"
+        }
+      ],
+      "createdAt": "2026-11-05T15:39:01.005Z",
+      "updatedAt": "2026-11-05T15:39:01.005Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 005-3 완료 표시"
+        }
+      ],
+      "implementationGuide": "1) 서버 기동 확인. 2) 시나리오별 navigate/snapshot/screenshot/console/network 확인. 3) 인증 우회 코드 금지, Google 로그인은 사용자가 수행. 4) 실패는 원인 분류 후 수정, 해당 시나리오부터 재실행.",
+      "verificationCriteria": "비로그인 시나리오가 모두 통과하고 로그인 상태 확인이 사용자 세션으로 완료되며 check-all과 build가 통과한다. ROADMAP 005-3이 완료로 표시된다.",
+      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영."
+    }
+  ]
+}
