@@ -52,8 +52,10 @@ export async function updateSession(request: NextRequest) {
   // 관리자 로그인(/admin/login 정확히 일치만. /admin 접두사 전체를 열지 않습니다.)
   const isPublicPath =
     pathname === "/" ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/auth") ||
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/auth" ||
+    pathname.startsWith("/auth/") ||
     pathname.startsWith("/e/") ||
     pathname === "/admin/login";
   const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
