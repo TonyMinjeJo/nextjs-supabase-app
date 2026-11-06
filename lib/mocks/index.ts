@@ -1,3 +1,4 @@
+export * from "./admin";
 export * from "./announcements";
 export * from "./carpool";
 export * from "./events";

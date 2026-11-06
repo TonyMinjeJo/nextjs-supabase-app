@@ -48,20 +48,37 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   const { pathname, search } = request.nextUrl;
-  // 비로그인 허용 경로: 홈, 로그인/인증, 이벤트 초대(/e/*, 공개 요약 + 로그인 유도)
+  // 비로그인 허용 경로: 홈, 로그인/인증, 이벤트 초대(/e/*, 공개 요약 + 로그인 유도),
+  // 관리자 로그인(/admin/login 정확히 일치만. /admin 접두사 전체를 열지 않습니다.)
   const isPublicPath =
     pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/e/");
+    pathname.startsWith("/e/") ||
+    pathname === "/admin/login";
+  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (!user && !isPublicPath) {
     // 로그인 후 원래 경로로 돌아오도록 next를 붙여 로그인 페이지로 보냅니다.
+    // /admin* 은 관리자 로그인으로, 그 외는 일반 로그인으로 보냅니다.
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = isAdminPath ? "/admin/login" : "/auth/login";
     url.search = "";
     url.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(url);
+  }
+
+  // 이미 로그인한 사용자가 관리자 로그인에 접근하면 /admin 으로 보냅니다.
+  // 새 redirect 응답에도 세션 쿠키를 복사해 세션이 끊기지 않게 합니다.
+  if (user && pathname === "/admin/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin";
+    url.search = "";
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    return redirectResponse;
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
