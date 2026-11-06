@@ -8,7 +8,9 @@ import { ShareLinkButton } from "@/components/event/share-link-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WidePage } from "@/components/page-container";
 import { formatEventDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   CURRENT_USER_ID,
   getAnnouncements,
@@ -47,97 +49,114 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
   const myRow = participants.find((row) => row.userId === CURRENT_USER_ID);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <h1 className="text-xl font-bold">{event.title}</h1>
-          <div className="flex shrink-0 items-center gap-1">
-            {isHost && <Badge variant="secondary">주최</Badge>}
-            <ParticipationBadge status={myRow?.status ?? null} />
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {formatEventDate(event.starts_at)} · {event.location}
-        </p>
-        {event.description && <p className="text-sm">{event.description}</p>}
-        <CapacityGauge
-          current={getGoingCount(event.id)}
-          capacity={event.capacity}
-        />
-        {isHost && (
-          <div className="flex gap-2">
-            <ShareLinkButton shareCode={event.share_code} />
-            <Button asChild variant="outline" size="sm" className="h-11 flex-1">
-              <Link href={`/events/${encodeURIComponent(event.id)}/manage`}>
-                이벤트 관리
-              </Link>
-            </Button>
-          </div>
+    <>
+      {/* 주최자만 lg 이상에서 넓은 폭을 켭니다. 참여자는 500px 열 유지 */}
+      {isHost && <WidePage />}
+      {/* 주최자 lg+: 좌측 요약 고정 열 + 우측 탭 영역. 모바일과 참여자는 단일 열 */}
+      <div
+        className={cn(
+          "flex flex-col gap-6",
+          isHost && "lg:grid lg:grid-cols-[18rem_1fr] lg:items-start lg:gap-8",
         )}
-      </div>
-
-      <Tabs defaultValue="announcements">
-        <TabsList className="w-full">
-          <TabsTrigger value="announcements">공지</TabsTrigger>
-          <TabsTrigger value="participants">참석자</TabsTrigger>
-          <TabsTrigger value="carpool">카풀</TabsTrigger>
-          <TabsTrigger value="settlement">정산</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="announcements">
-          <AnnouncementBoard
-            eventId={event.id}
-            initialItems={getAnnouncements(event.id)}
-            isHost={isHost}
+      >
+        <div
+          className={cn("flex flex-col gap-3", isHost && "lg:sticky lg:top-4")}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-xl font-bold">{event.title}</h1>
+            <div className="flex shrink-0 items-center gap-1">
+              {isHost && <Badge variant="secondary">주최</Badge>}
+              <ParticipationBadge status={myRow?.status ?? null} />
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {formatEventDate(event.starts_at)} · {event.location}
+          </p>
+          {event.description && <p className="text-sm">{event.description}</p>}
+          <CapacityGauge
+            current={getGoingCount(event.id)}
+            capacity={event.capacity}
           />
-        </TabsContent>
-
-        <TabsContent value="participants">
-          {participants.length === 0 ? (
-            <EmptyState message="참석자가 없습니다." />
-          ) : (
-            <ul className="flex flex-col divide-y rounded-lg border">
-              {participants.map((row) => (
-                <li
-                  key={row.userId}
-                  className="flex items-center justify-between gap-2 p-3"
-                >
-                  <span className="text-sm">{row.name}</span>
-                  <ParticipationBadge
-                    status={row.status}
-                    waitlistOrder={row.waitlistOrder}
-                  />
-                </li>
-              ))}
-            </ul>
+          {isHost && (
+            <div className="flex gap-2 lg:flex-col">
+              <ShareLinkButton shareCode={event.share_code} />
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-11 flex-1 lg:flex-none"
+              >
+                <Link href={`/events/${encodeURIComponent(event.id)}/manage`}>
+                  이벤트 관리
+                </Link>
+              </Button>
+            </div>
           )}
-        </TabsContent>
+        </div>
 
-        <TabsContent value="carpool">
-          <CarpoolBoard
-            eventId={event.id}
-            initialRides={rides.filter((r) => r.event_id === event.id)}
-            initialPassengers={passengers.filter((p) =>
-              eventRideIds.has(p.ride_id),
+        <Tabs defaultValue="announcements">
+          <TabsList className="w-full">
+            <TabsTrigger value="announcements">공지</TabsTrigger>
+            <TabsTrigger value="participants">참석자</TabsTrigger>
+            <TabsTrigger value="carpool">카풀</TabsTrigger>
+            <TabsTrigger value="settlement">정산</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="announcements">
+            <AnnouncementBoard
+              eventId={event.id}
+              initialItems={getAnnouncements(event.id)}
+              isHost={isHost}
+            />
+          </TabsContent>
+
+          <TabsContent value="participants">
+            {participants.length === 0 ? (
+              <EmptyState message="참석자가 없습니다." />
+            ) : (
+              <ul className="flex flex-col divide-y rounded-lg border">
+                {participants.map((row) => (
+                  <li
+                    key={row.userId}
+                    className="flex items-center justify-between gap-2 p-3"
+                  >
+                    <span className="text-sm">{row.name}</span>
+                    <ParticipationBadge
+                      status={row.status}
+                      waitlistOrder={row.waitlistOrder}
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
-            names={names}
-            goingUserIds={goingRows.map((row) => row.userId)}
-            myUserId={CURRENT_USER_ID}
-          />
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="settlement">
-          <SettlementPanel
-            rows={getSettlementRows(event.id)}
-            account={getTransferAccount(event.id)}
-            isHost={isHost}
-            myUserId={CURRENT_USER_ID}
-            manageHref={`/events/${encodeURIComponent(event.id)}/manage`}
-            hasExpenses={getExpenses(event.id).length > 0}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="carpool">
+            <CarpoolBoard
+              eventId={event.id}
+              initialRides={rides.filter((r) => r.event_id === event.id)}
+              initialPassengers={passengers.filter((p) =>
+                eventRideIds.has(p.ride_id),
+              )}
+              names={names}
+              goingUserIds={goingRows.map((row) => row.userId)}
+              myUserId={CURRENT_USER_ID}
+            />
+          </TabsContent>
+
+          <TabsContent value="settlement">
+            <SettlementPanel
+              rows={getSettlementRows(event.id)}
+              account={getTransferAccount(event.id)}
+              isHost={isHost}
+              myUserId={CURRENT_USER_ID}
+              manageHref={`/events/${encodeURIComponent(event.id)}/manage`}
+              hasExpenses={getExpenses(event.id).length > 0}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }
 

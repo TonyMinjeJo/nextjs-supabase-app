@@ -18,11 +18,30 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type LoginFormProps = React.ComponentPropsWithoutRef<"div"> & {
+  next?: string;
+  /** 카드 제목 (기본: "Login") */
+  title?: string;
+  /** 카드 설명 (기본: 영어 안내 문구) */
+  description?: string;
+  /** 회원가입 링크 표시 여부 (기본: true) */
+  showSignUp?: boolean;
+  /** 비밀번호 찾기 링크 표시 여부 (기본: true) */
+  showForgot?: boolean;
+  /** 폼 하단 보조 링크 (예: 관리자 로그인에서 일반 로그인으로) */
+  footerLink?: { href: string; label: string };
+};
+
 export function LoginForm({
   className,
   next = DEFAULT_AFTER_LOGIN,
+  title = "Login",
+  description = "Enter your email below to login to your account",
+  showSignUp = true,
+  showForgot = true,
+  footerLink,
   ...props
-}: React.ComponentPropsWithoutRef<"div"> & { next?: string }) {
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,10 +73,8 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardTitle className="text-2xl">{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <GoogleSignInButton next={next} />
@@ -82,12 +99,14 @@ export function LoginForm({
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
+                  {showForgot && (
+                    <Link
+                      href="/auth/forgot-password"
+                      className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  )}
                 </div>
                 <Input
                   id="password"
@@ -102,15 +121,27 @@ export function LoginForm({
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
-            </div>
+            {showSignUp && (
+              <div className="mt-4 text-center text-sm">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/auth/sign-up"
+                  className="underline underline-offset-4"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+            {footerLink && (
+              <div className="mt-4 text-center text-sm">
+                <Link
+                  href={footerLink.href}
+                  className="underline underline-offset-4"
+                >
+                  {footerLink.label}
+                </Link>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

@@ -1,4 +1,5 @@
 import { ManageBoard } from "@/components/event/manage-board";
+import { WidePage } from "@/components/page-container";
 import { Button } from "@/components/ui/button";
 import {
   CURRENT_USER_ID,
@@ -39,6 +40,7 @@ async function EventManage({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <WidePage />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold">이벤트 관리</h1>

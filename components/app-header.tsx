@@ -1,10 +1,13 @@
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { isAdmin } from "@/lib/mocks";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 // 로그인 후 영역(app/(app))의 공통 헤더.
 // 이 영역은 proxy에서 로그인이 보장되므로 서버 인증 조회 없이 정적으로 렌더링합니다.
+// "관리자" 링크는 더미(mocks)의 현재 사용자 role로만 판단합니다.
+// Phase 3에서 실제 role 조회(서버)로 교체 예정입니다.
 export function AppHeader() {
   return (
     <header className="w-full border-b border-b-foreground/10">
@@ -19,6 +22,11 @@ export function AppHeader() {
           <Button asChild variant="ghost" size="sm" className="px-2">
             <Link href="/events/new">이벤트 만들기</Link>
           </Button>
+          {isAdmin() && (
+            <Button asChild variant="ghost" size="sm" className="px-2">
+              <Link href="/admin">관리자</Link>
+            </Button>
+          )}
           <LogoutButton />
           <ThemeSwitcher />
         </nav>

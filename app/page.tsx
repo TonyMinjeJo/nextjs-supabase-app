@@ -1,4 +1,5 @@
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PageContainer } from "@/components/page-container";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
@@ -35,7 +36,7 @@ async function StartButton() {
 
 export default function Home() {
   return (
-    <div className="flex min-h-svh flex-col">
+    <PageContainer className="flex flex-col">
       <header className="mx-auto flex h-14 w-full items-center justify-between px-4">
         <Link href="/" className="font-semibold">
           모임 이벤트
@@ -64,6 +65,6 @@ export default function Home() {
           <StartButton />
         </Suspense>
       </main>
-    </div>
+    </PageContainer>
   );
 }
