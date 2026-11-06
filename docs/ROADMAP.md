@@ -114,7 +114,7 @@
   - 대시보드 통계 카드(이벤트/사용자/평균 참석률/정산 진행/입금 미확인), 이벤트·사용자 표 검색·필터 (더미 데이터)
   - 앱 헤더에 admin 전용 "관리자" 링크, 비-admin 접근 시 안내 후 돌려보냄(더미 단계 구조만)
   - 범위 제외: 사용자 정지/삭제 등 쓰기 동작, 실제 통계 쿼리, DB 연동
-  - Phase 3 이월: 서버 측 role 검사, `profiles.role` RLS(사용자가 자기 role을 바꾸지 못하게), admin 전용 조회 정책
+  - Phase 3 이월: 서버 측 role 검사(레이아웃뿐 아니라 각 page·데이터 접근 단계에서 재검증, 더미 `isAdmin()` 호출 지점 일괄 교체), `profiles.role` RLS(사용자가 자기 role을 바꾸지 못하게), admin 전용 조회 정책. 실데이터 연결은 이 항목 완료 후에만
   - 관리자 로그인 `/admin/login`: 사이드바·탭 없는 단독 카드 화면(`app/(admin-auth)`), Google + 이메일/비밀번호(`LoginForm` 선택 props 재사용), `next`는 `/admin*` 경로만 허용
   - proxy: 비로그인 허용 경로에 `/admin/login` 정확 일치만 추가, 비로그인 `/admin*` → `/admin/login?next=...`, 로그인 상태에서 `/admin/login` 접근 시 `/admin`으로 이동
   - Phase 3 이월: 로그인 후 실제 role 검증(서버 측)
