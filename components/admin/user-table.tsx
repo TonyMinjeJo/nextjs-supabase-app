@@ -103,7 +103,7 @@ export function UserTable({ rows }: UserTableProps) {
                 className="flex flex-col gap-2 rounded-lg border bg-card p-4 text-card-foreground"
               >
                 <div className="flex min-h-11 items-center justify-between gap-2">
-                  <span className="break-words font-semibold">{row.name}</span>
+                  <span className="font-semibold break-words">{row.name}</span>
                   <RoleBadge role={row.role} />
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">

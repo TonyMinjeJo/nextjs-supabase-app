@@ -88,7 +88,7 @@ export function AnnouncementBoard({
                   고정
                 </Badge>
               )}
-              <p className="whitespace-pre-wrap text-sm">{item.body}</p>
+              <p className="text-sm whitespace-pre-wrap">{item.body}</p>
               {isHost && (
                 <div className="flex gap-2">
                   <Button

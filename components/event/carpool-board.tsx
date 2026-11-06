@@ -207,7 +207,7 @@ export function CarpoolBoard({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-medium">{ride.origin}</p>
-                    <p className="break-keep text-sm text-muted-foreground">
+                    <p className="text-sm break-keep text-muted-foreground">
                       {formatEventDate(ride.depart_at)} 출발 · 운전{" "}
                       {names[ride.driver_id] ?? "알 수 없음"}
                     </p>
