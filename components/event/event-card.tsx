@@ -16,12 +16,12 @@ export function EventCard({
   return (
     <Link
       href={`/events/${encodeURIComponent(event.id)}`}
-      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
     >
       <Card className="transition-colors hover:bg-accent/50">
         <CardContent className="flex flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold leading-tight">{event.title}</h3>
+            <h3 className="leading-tight font-semibold">{event.title}</h3>
             <div className="flex shrink-0 items-center gap-1">
               {isHost && <Badge variant="secondary">주최</Badge>}
               <ParticipationBadge status={myStatus} />

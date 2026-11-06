@@ -53,7 +53,7 @@ export function RecentEvents({ rows }: RecentEventsProps) {
             <div className="flex flex-col gap-1">
               <Link
                 href={`/events/${row.id}`}
-                className="flex min-h-11 items-center break-words font-semibold underline-offset-4 hover:underline"
+                className="flex min-h-11 items-center font-semibold break-words underline-offset-4 hover:underline"
               >
                 {row.title}
               </Link>
@@ -102,7 +102,7 @@ export function RecentEvents({ rows }: RecentEventsProps) {
                   </Link>
                 </th>
                 <td className="p-3">{row.hostName}</td>
-                <td className="whitespace-nowrap p-3">
+                <td className="p-3 whitespace-nowrap">
                   {formatEventDate(row.startsAt)}
                 </td>
                 <td className="p-3">

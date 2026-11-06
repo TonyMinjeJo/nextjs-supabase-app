@@ -5,7 +5,7 @@
 ## 프로젝트 개요
 
 - 목적: 모임 이벤트 관리 웹 MVP (공지·참석·출석·카풀·정산, 공유 링크 참여). 기준 문서는 `docs/PRD.md`, 일정은 `docs/ROADMAP.md`.
-- 스택: Next.js(App Router, `next: latest`, Cache Components) + React 19 + Supabase Auth(`@supabase/ssr`) + Tailwind CSS 3 + shadcn/ui + `next-themes`.
+- 스택: Next.js(App Router, `next: latest`, Cache Components) + React 19 + Supabase Auth(`@supabase/ssr`) + Tailwind CSS 4 + shadcn/ui + `next-themes`.
 - 현재 상태: 스타터킷(`with-supabase`) 기반. Google OAuth 로그인/콜백만 구현됨. 이벤트 도메인 기능은 ROADMAP Phase 1~4 순서대로 구현한다.
 
 ## 프로젝트 구조

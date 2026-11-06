@@ -42,7 +42,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 기술 스택
 
 - Next.js App Router + Supabase Auth (`create-next-app --example with-supabase` 스타터)
-- Tailwind CSS 3, shadcn/ui (`components/ui`, 설정: `components.json`), `next-themes`
+- Tailwind CSS 4 (`tailwind.config` 없음, `app/globals.css`의 `@theme`/CSS 변수가 설정, PostCSS 플러그인은 `@tailwindcss/postcss`), shadcn/ui 기본 neutral 스타일 (`components/ui`, 설정: `components.json`), `tw-animate-css`, `next-themes`
 - 경로 별칭: `@/*`
 
 > **주의:** 소스는 `src/`가 아니라 저장소 루트(`app/`, `components/`, `lib/`)에 있습니다. `docs/guides/project-structure.md`의 `src/` 구조 설명과 다릅니다.

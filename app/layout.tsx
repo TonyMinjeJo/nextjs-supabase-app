@@ -36,16 +36,7 @@ export default function RootLayout({
         >
           {/* 폭 정책은 각 영역에서 components/page-container.tsx로 적용합니다. */}
           {children}
-          {/* 이 프로젝트의 색상 변수는 HSL 값이라 hsl()로 감싸야 토스트 배경이 보입니다. */}
-          <Toaster
-            style={
-              {
-                "--normal-bg": "hsl(var(--popover))",
-                "--normal-text": "hsl(var(--popover-foreground))",
-                "--normal-border": "hsl(var(--border))",
-              } as React.CSSProperties
-            }
-          />
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
