@@ -98,6 +98,29 @@
     - 정책 확정: 입금이 한 건이라도 확인되면 출석·비용 수정 잠금
     - Phase 3 이월: 송금 계좌 필드(F007), 입금 상태 단위(항목별 vs 사용자별), `Event` 타입명 DOM 충돌, 공개 경로 접두사 매칭 정확화, `(app)` 서버 측 인증/권한 이중 검사, `error.tsx`, 로그인 폼 한국어화·`text-destructive`, 남은 스타터 컴포넌트(`hero`, `deploy-button` 등) 정리
 
+- **Task 005-2: 주최자 관리 화면 데스크톱 레이아웃** ✅
+  - `/events/[id]/manage`를 `lg`(1024px) 이상에서 2열로 확장: 좌측 출석 체크·비용 입력, 우측 정산 표(1인당 금액/입금 상태/입금 확인)
+  - 정산 표는 넓은 화면에서 테이블(이름 / 분담액 / 입금 상태 / 액션 열)로 표시, 모바일은 현재 카드형 목록 유지
+  - 이벤트 상세(`/events/[id]`) 주최자 뷰도 넓은 화면에서 헤더 요약과 탭 영역이 한 화면에 들어오도록 컨테이너 폭 조정
+  - 선행 과제: 루트 `app/layout.tsx`가 전체 앱을 `max-w-[500px]` 모바일 열로 고정하고 있으므로, 관리·상세 화면에서만 넓은 폭을 허용하도록 컨테이너 구조를 먼저 정리 (다른 화면은 500px 유지)
+  - 데스크톱(1280px)·모바일(375px) 모두 확인
+  - 범위 제외: 새 관리자 역할·권한, 전체 이벤트 대시보드, DB 연동(Phase 3), 기존 모바일(375px) 레이아웃 변경
+  - 게이트: 완료 후 Task 006 진행
+  - **결과**: 루트 500px 래퍼를 `components/page-container.tsx`(`PageContainer`, `WidePage`)로 대체해 기본 화면은 500px 유지, `WidePage`를 렌더링한 페이지(주최자 상세, 관리)만 `lg` 이상에서 `max-w-5xl`로 확장(`:has()` 사용). 관리 화면 2열과 정산 테이블 적용. `check-all`, `build` 통과, 1280px·375px는 사용자가 로그인 세션에서 직접 확인(이상 없음)
+
+- **Task 005-3: 서비스 운영자(admin) 페이지 UI** - 우선순위
+  - 역할 모델: `Profile.role`("user" | "admin") 추가, `docs/PRD.md` 데이터 모델에 `profiles.role` 반영 (Task 006 입력)
+  - 라우트 그룹 `app/(admin)/admin`: 대시보드(`/admin`), 이벤트 목록(`/admin/events`), 사용자 목록(`/admin/users`) — 데스크톱 우선 사이드바 레이아웃, lg 미만은 상단 탭
+  - 대시보드 통계 카드(이벤트/사용자/평균 참석률/정산 진행/입금 미확인), 이벤트·사용자 표 검색·필터 (더미 데이터)
+  - 앱 헤더에 admin 전용 "관리자" 링크, 비-admin 접근 시 안내 후 돌려보냄(더미 단계 구조만)
+  - 범위 제외: 사용자 정지/삭제 등 쓰기 동작, 실제 통계 쿼리, DB 연동
+  - Phase 3 이월: 서버 측 role 검사, `profiles.role` RLS(사용자가 자기 role을 바꾸지 못하게), admin 전용 조회 정책
+  - 관리자 로그인 `/admin/login`: 사이드바·탭 없는 단독 카드 화면(`app/(admin-auth)`), Google + 이메일/비밀번호(`LoginForm` 선택 props 재사용), `next`는 `/admin*` 경로만 허용
+  - proxy: 비로그인 허용 경로에 `/admin/login` 정확 일치만 추가, 비로그인 `/admin*` → `/admin/login?next=...`, 로그인 상태에서 `/admin/login` 접근 시 `/admin`으로 이동
+  - Phase 3 이월: 로그인 후 실제 role 검증(서버 측)
+  - 데스크톱(1280px)·모바일(375px) 모두 확인
+  - 게이트: 완료 후 Task 006 진행
+
 ### Phase 3: 핵심 기능 구현
 
 - **Task 006: Supabase 스키마·RLS 설계·적용 및 타입 생성** - 우선순위
@@ -105,6 +128,7 @@
   - Supabase MCP로 마이그레이션 적용 (profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares)
   - 모든 테이블 RLS 활성화, 정책 적용 (주최자 쓰기, 참여자 본인 행 쓰기, 참여자만 하위 데이터 조회)
   - 로그인 시 profiles 자동 생성 트리거 (Google 이름/아바타)
+  - `profiles.role` 컬럼과 admin 조회 정책 포함 (Task 005-3 입력, 사용자가 자기 role을 바꾸지 못하게 RLS 설계)
   - `generate_typescript_types`로 DB 타입 생성 후 Task 005-1에서 확정된 도메인 타입(`lib/types/`)과 정합화
   - `get_advisors`(보안/성능) 점검 및 경고 해소
 

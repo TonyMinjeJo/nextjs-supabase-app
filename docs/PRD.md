@@ -195,6 +195,7 @@
 | id         | 고유 식별자 | → auth.users.id  |
 | name       | 표시 이름   | text             |
 | avatar_url | 프로필 이미지 | text           |
+| role       | 서비스 역할 (기본 user) | user / admin |
 
 ### event_series (반복 규칙)
 

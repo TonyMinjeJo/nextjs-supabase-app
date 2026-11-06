@@ -44,11 +44,12 @@
 - **금지**: `getClaims()` 제거.
 - **금지**: Supabase 클라이언트를 모듈 전역 변수에 저장. 요청/함수마다 새로 생성한다.
 - 서버 코드는 `await createClient()` (`lib/supabase/server.ts`), 브라우저 코드는 `lib/supabase/client.ts`를 사용한다.
-- 비로그인 허용 경로(`/`, `/login*`, `/auth*`, `/e/*`)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
+- 비로그인 허용 경로(`/`, `/login*`, `/auth*`, `/e/*`, `/admin/login` 정확 일치)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
 - `next` 쿼리 파라미터로 리다이렉트할 때는 반드시 `getSafeNext()`를 거친다.
   - 허용: `redirect(getSafeNext(searchParams.get("next")))`
   - 금지: `redirect(searchParams.get("next")!)`
 - 에러 메시지를 URL에 넣을 때는 `encodeURIComponent()`를 사용한다 (`/auth/error?error=...`).
+- 비로그인 `/admin*` 은 `/admin/login?next=...` 로, 로그인 상태의 `/admin/login` 접근은 `/admin` 으로 보낸다. `/admin/login` 페이지는 `app/(admin-auth)` 그룹에 두고 `(admin)` 사이드바 레이아웃 밖에 유지한다.
 - 공유 링크 참여 흐름(비로그인 → 로그인 → 이벤트 초대로 복귀)은 `getSafeNext`의 fallback과 `/auth/callback`의 `next` 전달을 사용한다. 기본 복귀 경로는 `lib/auth/safe-next.ts`의 `DEFAULT_AFTER_LOGIN`(`/events`)이다.
 
 ## Next.js 규칙
