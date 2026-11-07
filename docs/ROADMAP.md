@@ -123,7 +123,7 @@
 
 ### Phase 3: 핵심 기능 구현
 
-- **Task 006: Supabase 스키마·RLS 설계·적용 및 타입 생성** - 우선순위
+- **Task 006: Supabase 스키마·RLS 설계·적용 및 타입 생성** ✅ - 우선순위
   - Task 005-1에서 확정된 타입/PRD 데이터 모델 기준으로 DB 스키마(테이블·관계·인덱스)와 RLS 정책(조회/쓰기 주체별) 설계
   - Supabase MCP로 마이그레이션 적용 (profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares)
   - 모든 테이블 RLS 활성화, 정책 적용 (참여자만 하위 데이터 조회)
@@ -132,9 +132,11 @@
   - 로그인 시 profiles 자동 생성 트리거 (Google 이름/아바타)
   - `profiles.role` 컬럼과 admin 조회 정책 포함 (Task 005-3 입력, 사용자가 자기 role을 바꾸지 못하게 컬럼 단위 권한으로 설계)
   - `profiles.email` 삭제(원본은 `auth.users`)와 `profiles` 조회 범위 제한(본인/같은 이벤트 참여자/admin)
-  - 스키마 변경 중 `profiles` 보강·RLS는 Supabase 브랜치에서 먼저 검증, 적용한 마이그레이션 SQL은 `supabase/migrations/`에 저장
+  - 스키마 변경 중 `profiles` 보강·RLS는 먼저 `begin; ... rollback;` 트랜잭션 시험으로 검증하고 복구 SQL을 준비한 뒤 원격에 적용(무료 플랜이라 Supabase 브랜치는 사용하지 않음), 적용한 마이그레이션 SQL은 `supabase/migrations/`에 저장
   - `generate_typescript_types`로 DB 타입 생성 후 Task 005-1에서 확정된 도메인 타입(`lib/types/`)과 정합화
-  - `get_advisors`(보안/성능) 점검 및 경고 해소
+  - `get_advisors`(보안/성능) 점검 및 경고 해소 (무료 플랜에서 불가능한 항목은 제외: 유출 비밀번호 보호 `auth_leaked_password_protection`은 Pro 플랜 전용이라 경고를 수용)
+  - 결과 (2026-11-07): Task 006 마이그레이션 5개 적용 (`profiles_hardening`, `events_core_tables`, `carpool_settlement_tables`, `rls_helpers_policies`, `public_invite_function`, 저장소 `supabase/migrations/`와 일치). public 정책 24개, 롤백 트랜잭션 시나리오 31개 통과, advisor ERROR 없음 (`get_event_invite` anon·authenticated 실행 가능 WARN 2건은 의도, 유출 비밀번호 보호 WARN은 수용). 첫 admin은 사용자 승인 후 지정. 타입은 `lib/supabase/database.types.ts`, `Event`는 `MeetupEvent`로 개명, `expenses` 항목명은 DB `name` 기준.
+  - Task 007 입력: ① `isAdmin`과 `CURRENT_USER_ID`(목 데이터) 교체 지점을 실제 세션 기반으로 전환하고 `lib/auth/session.ts` 신설 ② 라우트 `id`/`code` 파라미터 UUID·share_code 검증 ③ 캐시용 anon 클라이언트(`"use cache"` 안에서는 `cookies()` 사용 금지) ④ 공개 초대는 `get_event_invite` RPC 사용 ⑤ 참석·카풀·정산 쓰기는 RPC(Task 008/010/011), `Profile.name`↔`full_name` 매핑, `transfer_account` 노출 경로 설계
 
 - **Task 007: 이벤트 생성·조회·공유 링크 구현 (F001, F002, F011)**
   - 이벤트 생성/수정/복제 서버 액션 (서버 검증 + 주최자 권한)
@@ -190,7 +192,7 @@
 
 - **Task 014: 품질 점검 및 배포**
   - `npm run check-all`, `npm run build` 통과 확인
-  - Supabase advisors 최종 점검, 프로덕션 OAuth 리다이렉트 URL 설정
+  - Supabase advisors 최종 점검(무료 플랜 전용 불가 항목은 제외), 프로덕션 OAuth 리다이렉트 URL 설정
   - Vercel 환경 변수 설정 및 배포
   - 소규모 실사용 베타 (실제 모임 1~2건)와 피드백 수집
 
