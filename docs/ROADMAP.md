@@ -108,7 +108,7 @@
   - 게이트: 완료 후 Task 006 진행
   - **결과**: 루트 500px 래퍼를 `components/page-container.tsx`(`PageContainer`, `WidePage`)로 대체해 기본 화면은 500px 유지, `WidePage`를 렌더링한 페이지(주최자 상세, 관리)만 `lg` 이상에서 `max-w-5xl`로 확장(`:has()` 사용). 관리 화면 2열과 정산 테이블 적용. `check-all`, `build` 통과, 1280px·375px는 사용자가 로그인 세션에서 직접 확인(이상 없음)
 
-- **Task 005-3: 서비스 운영자(admin) 페이지 UI** - 우선순위
+- **Task 005-3: 서비스 운영자(admin) 페이지 UI** ✅ - 우선순위
   - 역할 모델: `Profile.role`("user" | "admin") 추가, `docs/PRD.md` 데이터 모델에 `profiles.role` 반영 (Task 006 입력)
   - 라우트 그룹 `app/(admin)/admin`: 대시보드(`/admin`), 이벤트 목록(`/admin/events`), 사용자 목록(`/admin/users`) — 데스크톱 우선 사이드바 레이아웃, lg 미만은 상단 탭
   - 대시보드 통계 카드(이벤트/사용자/평균 참석률/정산 진행/입금 미확인), 이벤트·사용자 표 검색·필터 (더미 데이터)
@@ -126,9 +126,13 @@
 - **Task 006: Supabase 스키마·RLS 설계·적용 및 타입 생성** - 우선순위
   - Task 005-1에서 확정된 타입/PRD 데이터 모델 기준으로 DB 스키마(테이블·관계·인덱스)와 RLS 정책(조회/쓰기 주체별) 설계
   - Supabase MCP로 마이그레이션 적용 (profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares)
-  - 모든 테이블 RLS 활성화, 정책 적용 (주최자 쓰기, 참여자 본인 행 쓰기, 참여자만 하위 데이터 조회)
+  - 모든 테이블 RLS 활성화, 정책 적용 (참여자만 하위 데이터 조회)
+    - 단순 테이블(`events`, `event_series`, `announcements`, `expenses`, `carpool_rides`): 소유자(주최자·운전자) 직접 쓰기 허용
+    - 상태 기계 테이블(`participations`, `carpool_passengers`, `settlement_shares`): 006에서는 **조회 정책만** 두고, 쓰기는 Task 008/010/011의 RPC로 처리
   - 로그인 시 profiles 자동 생성 트리거 (Google 이름/아바타)
-  - `profiles.role` 컬럼과 admin 조회 정책 포함 (Task 005-3 입력, 사용자가 자기 role을 바꾸지 못하게 RLS 설계)
+  - `profiles.role` 컬럼과 admin 조회 정책 포함 (Task 005-3 입력, 사용자가 자기 role을 바꾸지 못하게 컬럼 단위 권한으로 설계)
+  - `profiles.email` 삭제(원본은 `auth.users`)와 `profiles` 조회 범위 제한(본인/같은 이벤트 참여자/admin)
+  - 스키마 변경 중 `profiles` 보강·RLS는 Supabase 브랜치에서 먼저 검증, 적용한 마이그레이션 SQL은 `supabase/migrations/`에 저장
   - `generate_typescript_types`로 DB 타입 생성 후 Task 005-1에서 확정된 도메인 타입(`lib/types/`)과 정합화
   - `get_advisors`(보안/성능) 점검 및 경고 해소
 

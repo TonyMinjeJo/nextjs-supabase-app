@@ -193,9 +193,11 @@
 | 필드       | 설명        | 타입/관계        |
 | ---------- | ----------- | ---------------- |
 | id         | 고유 식별자 | → auth.users.id  |
-| name       | 표시 이름   | text             |
+| full_name  | 표시 이름 (앱 도메인 타입의 `name`으로 매핑) | text |
 | avatar_url | 프로필 이미지 | text           |
-| role       | 서비스 역할 (기본 user) | user / admin |
+| role       | 서비스 역할 (기본 user, not null) | user / admin |
+
+> 이메일은 `profiles`에 두지 않습니다. 원본은 `auth.users`이며, `profiles` 조회는 본인 / 같은 이벤트 참여자 / admin으로 제한합니다. `role`은 사용자가 직접 바꿀 수 없습니다. (Task 006)
 
 ### event_series (반복 규칙)
 
@@ -216,6 +218,7 @@
 | title / starts_at / location | 기본 정보 | text / timestamp / text |
 | capacity / rsvp_deadline     | 정원 / 신청 마감 | int / timestamp  |
 | share_code     | 공유 링크 코드     | text (unique)         |
+| transfer_account | 송금 안내 계좌 (선택) | text. 주최자·참여자·admin만 조회, 공개 초대 RPC는 반환하지 않음 |
 
 ### participations (참석)
 
@@ -251,7 +254,8 @@
 
 | 필드    | 설명      | 타입/관계                      |
 | ------- | --------- | ------------------------------ |
-| ride_id | 운행      | → carpool_rides.id             |
+| event_id | 이벤트 (정합성용 비정규화) | → events.id         |
+| ride_id | 운행      | → carpool_rides.id (복합 FK `(ride_id, event_id)`로 운행의 이벤트와 일치 보장) |
 | user_id | 탑승자    | → profiles.id                  |
 | status  | 신청 상태 | pending / accepted / rejected  |
 
@@ -268,10 +272,13 @@
 
 | 필드        | 설명          | 타입/관계       |
 | ----------- | ------------- | --------------- |
-| expense_id  | 비용 항목     | → expenses.id   |
+| event_id    | 이벤트        | → events.id (PK: `(event_id, user_id)`) |
 | user_id     | 분담자        | → profiles.id   |
-| amount      | 분담 금액     | int             |
-| paid_marked / confirmed | 입금 표시 / 확인 | boolean |
+| amount      | 총 분담액 (사용자별 1행) | int  |
+| payment_status | 입금 상태  | unpaid / marked / confirmed (기본 unpaid) |
+| marked_at / confirmed_at | 입금 표시 / 확인 시각 | timestamp (선택) |
+
+> 정산은 **이벤트·사용자별 1행**입니다. 항목별 분담 내역은 DB에 저장하지 않고 `lib/settlement.ts`의 `calcShares`로 계산합니다. 상태 전환(입금 표시/확인)은 서버 RPC로만 수행합니다.
 
 ## 🛠️ 기술 스택
 
