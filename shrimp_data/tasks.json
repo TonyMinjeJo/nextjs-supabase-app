@@ -589,10 +589,10 @@
       "id": "3f66830c-a37f-4429-ab5a-f19260c847d1",
       "name": "admin 역할 모델·더미 데이터·집계 헬퍼 추가",
       "description": "lib/types/profile.ts의 Profile에 role('user'|'admin')을 추가하고 lib/mocks/users.ts 사용자에 role을 지정한다(u1은 admin). lib/mocks/admin.ts에 대시보드 통계(전체 이벤트, 예정/지난, 사용자 수, 평균 참석률, 정산 진행 이벤트 수, 입금 미확인 건수)와 이벤트/사용자 표 행 집계 헬퍼를 만들고 기존 getGoingCount, getSettlementRows, getInitialPaymentStatus를 재사용한다. docs/PRD.md 데이터 모델에 profiles.role을 반영한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "createdAt": "2026-11-05T15:28:28.236Z",
-      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-07T13:30:01.851Z",
       "relatedFiles": [
         {
           "path": "lib/types/profile.ts",
@@ -622,20 +622,22 @@
       ],
       "implementationGuide": "1) Profile 타입에 UserRole 유니온과 role 필드 추가 후 타입 오류가 나는 곳 수정. 2) lib/mocks/users.ts 사용자 role 지정, 현재 사용자 admin 여부 헬퍼(isAdmin) 추가. 3) lib/mocks/admin.ts 작성(순수 함수, 새 계산 로직 최소화), lib/mocks/index.ts에서 재export. 4) docs/PRD.md 데이터 모델 표의 profiles에 role 행 추가. 5) npm run check-all.",
       "verificationCriteria": "Profile.role 타입이 추가되고 모든 더미 사용자에 role이 있다. admin.ts 집계 값이 더미 데이터와 수동 계산이 일치한다. PRD 데이터 모델에 profiles.role이 반영된다. npm run check-all 통과.",
-      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "커밋 6cd8335에 구현 완료. Profile.role(UserRole), u1 admin, lib/mocks/admin.ts의 getAdminStats·getAdminEventRows·getAdminUserRows, isAdmin() 헬퍼, PRD profiles.role 반영을 확인했고 코드 리뷰 후 정산 집계 0원 행 제외와 참석률 클램프를 보강했다. check-all과 build 통과.",
+      "completedAt": "2026-11-07T13:30:01.848Z"
     },
     {
       "id": "f89c86ae-c53f-4570-aa66-86ea48535ad4",
       "name": "admin 라우트 그룹·레이아웃·접근 제어·헤더 링크",
       "description": "app/(admin)/admin/layout.tsx를 만든다. 데스크톱(lg 이상)은 좌측 사이드바(대시보드, 이벤트, 사용자, 서비스로 돌아가기), lg 미만은 상단 가로 탭, 콘텐츠 max-w-6xl. 현재 사용자가 admin이 아니면 manage 페이지 패턴(안내와 돌아가기 버튼)으로 막는다. components/app-header.tsx에 admin일 때만 관리자 링크를 노출한다. 인증 우회용 토글은 만들지 않는다. 기존 (app) 화면 폭 정책에 회귀가 없어야 한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "3f66830c-a37f-4429-ab5a-f19260c847d1"
         }
       ],
       "createdAt": "2026-11-05T15:28:28.236Z",
-      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-07T13:30:12.614Z",
       "relatedFiles": [
         {
           "path": "app/(admin)/admin/layout.tsx",
@@ -655,20 +657,22 @@
       ],
       "implementationGuide": "1) app/(admin)/admin/layout.tsx 작성(서버 컴포넌트, 동적 접근은 Suspense 규칙 준수), 사이드바/탭 내비게이션 컴포넌트 분리. 2) 비-admin 안내 UI는 app/(app)/events/[id]/manage/page.tsx 패턴 재사용. 3) app-header에 isAdmin이면 /admin 링크 추가. 4) 임시 빈 페이지 app/(admin)/admin/page.tsx 등 3개 라우트를 만들어 내비게이션이 동작하게 한다. 5) npm run check-all.",
       "verificationCriteria": "/admin, /admin/events, /admin/users 라우트가 레이아웃 안에서 열린다. lg 이상 사이드바, lg 미만 상단 탭이 보인다. 헤더에 관리자 링크가 admin일 때만 보인다. 비-admin 분기 코드가 있다. (app) 화면의 500px 열이 그대로다. npm run check-all 통과.",
-      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "커밋 6cd8335에 구현 완료. app/(admin)/admin/layout.tsx의 lg 이상 사이드바와 lg 미만 상단 탭, max-w-6xl, 비 admin 차단 안내, 헤더 admin 전용 관리자 링크를 확인했다. 인증 우회 토글 없음, 기존 (app) 화면 폭 정책 회귀 없음. 사용자가 로그인 세션에서 직접 확인했다.",
+      "completedAt": "2026-11-07T13:30:12.612Z"
     },
     {
       "id": "c6b13ee7-5161-4b58-9a85-bc563fc4ce5a",
       "name": "admin 대시보드 페이지 UI",
       "description": "app/(admin)/admin/page.tsx에 통계 카드 6개(전체 이벤트, 예정/지난, 전체 사용자, 평균 참석률, 정산 진행 중 이벤트, 입금 미확인 건수)와 최근 이벤트 5건 표를 만든다. 서버 페이지는 Suspense 안에서 lib/mocks/admin.ts를 읽어 props로 전달하고, 표는 375px에서 넘치지 않게 lg 미만 카드형 또는 가로 스크롤로 처리한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "f89c86ae-c53f-4570-aa66-86ea48535ad4"
         }
       ],
       "createdAt": "2026-11-05T15:28:28.236Z",
-      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-07T13:30:16.933Z",
       "relatedFiles": [
         {
           "path": "app/(admin)/admin/page.tsx",
@@ -683,20 +687,22 @@
       ],
       "implementationGuide": "1) 통계 카드는 Card 컴포넌트와 formatWon 등 기존 포맷 재사용. 2) 최근 이벤트 표에 CapacityGauge, formatEventDate 재사용, 행에서 /events/[id]로 이동. 3) 빈 상태는 EmptyState. 4) 1280px와 375px 모두 레이아웃 확인.",
       "verificationCriteria": "대시보드에 카드 6개와 최근 이벤트 5건이 더미 데이터 집계값대로 표시된다. 375px에서 가로 스크롤 없이 읽을 수 있다. npm run check-all 통과.",
-      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "커밋 6cd8335에 구현 완료. /admin 통계 카드 6개와 최근 이벤트 5건 표, Suspense 안에서 더미 데이터 읽기, 375px 카드형 전환을 확인했다. 리뷰 지적에 따라 표 래퍼를 overflow-x-auto로 바꾸고 metadata를 추가했으며 사용자가 화면을 직접 확인했다.",
+      "completedAt": "2026-11-07T13:30:16.931Z"
     },
     {
       "id": "d74f6617-9e3b-4217-998a-a07ff7745ab5",
       "name": "admin 이벤트·사용자 목록 UI",
       "description": "app/(admin)/admin/events/page.tsx와 users/page.tsx에 표와 검색·필터를 만든다. 이벤트: 제목, 주최자, 일시, 참석/정원 게이지, 정산 상태, 공유 코드 열, 제목·주최자 검색, 예정/지난/전체 필터, 행 클릭 시 /events/[id]. 사용자: 이름, 역할 뱃지, 주최 수, 참여 수, 이름 검색. 검색·필터는 클라이언트 컴포넌트, 서버 페이지는 Suspense 안에서 데이터를 읽어 props로 전달한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "f89c86ae-c53f-4570-aa66-86ea48535ad4"
         }
       ],
       "createdAt": "2026-11-05T15:28:28.236Z",
-      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-07T13:30:21.872Z",
       "relatedFiles": [
         {
           "path": "app/(admin)/admin/events/page.tsx",
@@ -721,13 +727,15 @@
       ],
       "implementationGuide": "1) components/admin/event-table.tsx, user-table.tsx 클라이언트 컴포넌트로 검색 상태 관리. 2) 필터 결과 없음은 EmptyState. 3) 정산 상태 표시에 PaymentBadge 재사용. 4) 375px에서 카드형 또는 가로 스크롤. 5) 대시보드 작업과 파일이 겹치지 않으므로 병렬 진행 가능.",
       "verificationCriteria": "이벤트 5건, 사용자 10명이 표에 표시되고 검색·필터가 동작한다. 결과 없음 문구가 보이고 375px에서 레이아웃이 깨지지 않는다. 행 클릭 이동이 동작한다. npm run check-all 통과.",
-      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "커밋 6cd8335에 구현 완료. /admin/events의 제목·주최자 검색, 예정/지난/전체 필터, 참석 게이지, 정산 상태, 공유 코드 열과 /admin/users의 이름 검색, 역할 뱃지, 주최·참여 수를 구현했다. 검색·필터는 클라이언트 컴포넌트, 데이터는 Suspense 안에서 읽는다. 사용자가 직접 확인했다.",
+      "completedAt": "2026-11-07T13:30:21.870Z"
     },
     {
       "id": "7995b815-6881-40a4-8ec3-418595a796fe",
       "name": "admin 페이지 검증과 ROADMAP 005-3 완료 반영",
       "description": "npm run check-all 후 npm run build를 순서대로 직접 실행해 통과를 확인한다. 로그인이 필요한 화면은 사용자가 로그인 세션에서 직접 1280px와 375px로 확인하며 인증 우회 코드는 만들지 않는다. 확인 대상: /admin, /admin/events, /admin/users, 헤더 관리자 링크, 회귀(/events, /events/e4/manage, /e/futsal1114). 확인 후 ROADMAP.md Task 005-3을 완료로 표시하고 결과를 기록한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "c6b13ee7-5161-4b58-9a85-bc563fc4ce5a"
@@ -737,7 +745,7 @@
         }
       ],
       "createdAt": "2026-11-05T15:28:28.236Z",
-      "updatedAt": "2026-11-05T15:28:28.236Z",
+      "updatedAt": "2026-11-07T13:30:26.143Z",
       "relatedFiles": [
         {
           "path": "docs/ROADMAP.md",
@@ -747,16 +755,18 @@
       ],
       "implementationGuide": "1) check-all, build 직접 실행. 2) 사용자에게 확인 URL과 볼 점을 안내하고 결과를 받는다. 3) 어긋남은 해당 작업 에이전트에게 수정 지시. 4) ROADMAP 완료 표시와 결과 요약, Phase 3 이월(서버 role 검사, role RLS) 유지 확인.",
       "verificationCriteria": "check-all과 build가 통과하고 사용자가 1280px/375px 화면과 회귀를 확인했다. ROADMAP Task 005-3이 완료로 표시된다.",
-      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build."
+      "analysisResult": "Task 005-3: 서비스 운영자(admin) 페이지 UI. Profile.role 추가, app/(admin)/admin 라우트 그룹과 데스크톱 우선 레이아웃, 더미 데이터 기반 대시보드·이벤트·사용자 화면. 읽기 중심, DB 연동 없음, 인증 우회 토글 없음, 서버 role 검사와 RLS는 Phase 3 이월. 기존 (app) 화면 폭 정책 회귀 없음, components/ui 미수정. 완료 전 npm run check-all 후 npm run build.",
+      "summary": "구현 에이전트가 npm run check-all과 npm run build를 직접 실행해 통과했고, 리뷰 수정 후 재실행도 통과했다. 사용자가 로그인 세션에서 admin 화면과 회귀(/events, /events/e4/manage)를 직접 확인했으며 이상 없음. docs/ROADMAP.md Task 005-3에 완료 표시를 했고 서버 role 검사와 role RLS는 Phase 3 이월로 유지했다.",
+      "completedAt": "2026-11-07T13:30:26.140Z"
     },
     {
       "id": "8f1accff-e79a-4804-9c79-5716fef7fc35",
       "name": "관리자 로그인 라우트·proxy 분기·LoginForm props",
       "description": "app/(admin-auth)/admin/login/page.tsx를 사이드바 없는 가운데 카드 화면으로 만들고(Google + 이메일/비밀번호, 한국어 관리자 문구, 회원가입 링크 숨김, 일반 로그인 보조 링크), components/login-form.tsx에 title/description/showSignUp/showForgot/footerLink 선택 props를 기본값 동일하게 추가한다. lib/supabase/proxy.ts에 /admin/login 정확 일치 허용, 비로그인 /admin* 은 /admin/login?next=, 로그인 상태의 /admin/login 은 /admin 으로 redirect(세션 쿠키 복사)를 추가한다. next는 /admin 하위만 허용한다. CLAUDE.md, shrimp-rules.md, ROADMAP 005-3 항목을 반영한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "createdAt": "2026-11-05T15:39:01.005Z",
-      "updatedAt": "2026-11-05T15:39:01.005Z",
+      "updatedAt": "2026-11-07T13:30:07.576Z",
       "relatedFiles": [
         {
           "path": "app/(admin-auth)/admin/login/page.tsx",
@@ -786,20 +796,22 @@
       ],
       "implementationGuide": "1) page.tsx는 app/auth/login/page.tsx 패턴(Suspense 안 searchParams await)을 따르고 getSafeNext(next, '/admin') 후 /admin 하위만 허용. 2) LoginForm props 기본값은 현재 동작과 동일. 3) proxy는 createServerClient와 getClaims 사이에 코드 삽입 금지, redirect 응답에 supabaseResponse.cookies 복사. 4) 문서 갱신. 5) npm run check-all.",
       "verificationCriteria": "/admin/login 이 사이드바 없이 열리고 proxy 분기가 계획대로이며 /auth/login 화면이 변하지 않는다. (admin) 레이아웃은 수정되지 않았다. npm run check-all 통과.",
-      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영."
+      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영.",
+      "summary": "커밋 6cd8335에 구현 완료. /admin/login 단독 카드 화면, LoginForm 선택 props(기본값 동일), proxy의 /admin/login 정확 일치 허용·비로그인 /admin* 리다이렉트·로그인 상태 /admin 이동(세션 쿠키 복사), next는 /admin 하위만 허용. 리뷰에서 createServerClient~getClaims 사이 코드 없음과 오픈 리다이렉트 방어를 확인했고 문서 표기도 정정했다.",
+      "completedAt": "2026-11-07T13:30:07.573Z"
     },
     {
       "id": "7b0c29e6-26c5-4936-a45b-e4c5cf532054",
       "name": "관리자 로그인 Playwright 검증과 ROADMAP 반영",
       "description": "개발 서버에서 Playwright MCP로 비로그인 시나리오(리다이렉트, 메뉴 없음 1280/375px, 잘못된 로그인 오류, next 보정, /admin/events 보호, 회귀)를 실행하고, 로그인 상태(/admin/login -> /admin, 로그아웃 후 재진입)는 사용자가 직접 Google 로그인한 세션으로 확인한다. npm run check-all 후 npm run build를 직접 실행하고 결과를 그대로 보고한 뒤 ROADMAP Task 005-3 완료를 표시한다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "8f1accff-e79a-4804-9c79-5716fef7fc35"
         }
       ],
       "createdAt": "2026-11-05T15:39:01.005Z",
-      "updatedAt": "2026-11-05T15:39:01.005Z",
+      "updatedAt": "2026-11-07T13:30:38.529Z",
       "relatedFiles": [
         {
           "path": "docs/ROADMAP.md",
@@ -809,7 +821,292 @@
       ],
       "implementationGuide": "1) 서버 기동 확인. 2) 시나리오별 navigate/snapshot/screenshot/console/network 확인. 3) 인증 우회 코드 금지, Google 로그인은 사용자가 수행. 4) 실패는 원인 분류 후 수정, 해당 시나리오부터 재실행.",
       "verificationCriteria": "비로그인 시나리오가 모두 통과하고 로그인 상태 확인이 사용자 세션으로 완료되며 check-all과 build가 통과한다. ROADMAP 005-3이 완료로 표시된다.",
-      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영."
+      "analysisResult": "관리자 로그인 /admin/login 추가: (admin-auth) 라우트 그룹으로 사이드바 레이아웃 밖에 두고, LoginForm 선택 props 재사용, proxy는 /admin/login 정확 일치 허용과 /admin* 비로그인 시 /admin/login 이동, 로그인 상태 /admin/login은 /admin으로 이동. 실제 role 검증은 Phase 3 이월, 인증 우회 코드 금지, Playwright MCP 검증과 check-all/build 후 ROADMAP 반영.",
+      "summary": "Playwright로 비로그인 시나리오를 실행해 통과했다: /admin* 이 /admin/login?next= 로 이동, /events* 는 /auth/login, /e/futsal1114 공개, /admin/loginx 보호, 로그인 화면에 회원가입 링크 없음, 375px 가로 스크롤 없음, 잘못된 로그인 오류 문구 표시. check-all과 build 통과. 로그인 상태 확인은 사용자가 직접 수행해 이상 없음으로 확인했고 ROADMAP 005-3에 완료 표시했다.",
+      "completedAt": "2026-11-07T13:30:38.526Z"
+    },
+    {
+      "id": "5ed48bde-540b-4f43-89e9-e012c33b9ab2",
+      "name": "Task006-1 사전 점검과 PRD·ROADMAP 문구 확정",
+      "description": "DB 변경 전 준비 작업. 1) Supabase MCP execute_sql로 SELECT만 사용해 public.profiles 1행과 auth.users 1명의 현재 값을 확인하고 기록한다. 2) docs/PRD.md 데이터 모델을 수정한다: profiles는 full_name과 role(user|admin)을 쓰고 email은 제거, events에 transfer_account(text) 추가, settlement_shares를 (event_id,user_id) 사용자별 1행으로 바꾸고 amount는 총 분담액, 상태는 payment_status(unpaid|marked|confirmed)와 marked_at, confirmed_at으로 기술, carpool_passengers에 event_id 추가. 3) docs/ROADMAP.md Task 006 항목의 참여자 본인 행 쓰기 문구를 participations, carpool_passengers, settlement_shares는 006에서 조회 정책만 두고 쓰기는 Task 008, 010, 011의 RPC로 처리한다로 고친다. 완료 기준: 문서 두 개가 계획과 일치하고 DB와 코드는 변경되지 않았다.",
+      "notes": "docs 폴더는 prettierignore 대상이라 포맷 훅이 적용되지 않는다. 기존 미커밋 변경을 되돌리지 않는다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:32:56.622Z",
+      "relatedFiles": [
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "데이터 모델 갱신"
+        },
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 006 쓰기 경로 문구 수정"
+        },
+        {
+          "path": "lib/types/settlement.ts",
+          "type": "REFERENCE",
+          "description": "현재 정산 타입 확인"
+        }
+      ],
+      "implementationGuide": "1) execute_sql로 select id, email, username, full_name from public.profiles 만 실행. 2) docs/PRD.md에서 데이터 모델 섹션과 profiles, events, settlement_shares, carpool_passengers 표를 찾아 Edit로 수정. 3) docs/ROADMAP.md 126~133행 Task 006 항목 문구 Edit. DDL과 DML 금지.",
+      "verificationCriteria": "PRD와 ROADMAP이 확정 결정(D1, D2, D3, D4, D8)과 일치하고 git diff에 문서 변경만 있다. profiles 현재 값이 기록되어 있다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다.",
+      "summary": "DB는 SELECT만 실행해 현재 상태를 확인했다: profiles 1행(RLS on, role 없음, email 있음), 정책 3개, handle_new_user·set_updated_at 트리거, 잔여물 없음, advisors는 leaked password 1건뿐으로 앞선 분석과 일치. 추가로 anon·authenticated에 테이블 단위 과도한 GRANT가 있음을 확인했다. docs/PRD.md(profiles full_name·role, events.transfer_account, settlement_shares 사용자별 1행과 payment_status, carpool_passengers.event_id)와 docs/ROADMAP.md Task 006 쓰기 경로 문구를 수정했고 git diff로 docs 두 개 외 코드·DB 변경이 없음을 확인했다.",
+      "completedAt": "2026-11-07T13:32:56.620Z"
+    },
+    {
+      "id": "ed6452d2-367c-4251-94bc-f2c88b3903e8",
+      "name": "Task006-2 마이그레이션 profiles_hardening 작성과 브랜치 검증",
+      "description": "profiles 보강 마이그레이션. 내용: enum 4개 생성(user_role, participation_status, passenger_status, payment_status), profiles.role 추가(user_role, not null, default user), profiles.email 삭제, 권한 재구성: Task006-1 점검에서 anon과 authenticated에 테이블 단위 INSERT/UPDATE/DELETE/TRUNCATE/TRIGGER/REFERENCES 권한이 과하게 열려 있음을 확인했으므로 REVOKE ALL ON public.profiles FROM anon, authenticated 를 먼저 하고, authenticated 에는 select 와 update(full_name, avatar_url, username, bio) 컬럼 단위 권한만 GRANT 한다(anon 권한은 모두 제거). profiles_insert_own 정책과 INSERT 권한 제거(트리거가 생성), 기존 SELECT 정책 using(true)는 이 단계에서 유지하되 email 컬럼이 삭제되므로 이메일 노출은 사라지고 조회 범위 제한은 Task006-5에서 한다. handle_new_user 보강(full_name은 coalesce(full_name, name, split_part(email,'@',1)), avatar_url 또는 picture, on conflict (id) do nothing, null 안전), private 스키마 생성. 이 마이그레이션은 되돌리기 어려우므로 먼저 Supabase 브랜치에서 검증한다. 브랜치 생성은 비용이 발생하므로 create_branch 호출 전에 비용을 확인해 사용자에게 알리고 승인을 받는다. 검증 후 원격에 apply_migration으로 적용하고 같은 SQL을 supabase/migrations 폴더에 파일로 저장한다.",
+      "notes": "테이블 단위 GRANT가 컬럼 GRANT를 덮어쓰므로 REVOKE를 반드시 먼저 한다. profiles 1행이 보존되어야 한다. 새 기능 의존: Task006-1.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "5ed48bde-540b-4f43-89e9-e012c33b9ab2"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:33:54.233Z",
+      "relatedFiles": [
+        {
+          "path": "supabase/migrations",
+          "type": "CREATE",
+          "description": "profiles_hardening SQL 파일 저장"
+        },
+        {
+          "path": "lib/types/profile.ts",
+          "type": "REFERENCE",
+          "description": "Profile 타입과 role 확인"
+        }
+      ],
+      "implementationGuide": "1) SQL 파일 초안을 supabase/migrations/<version>_profiles_hardening.sql 로 작성(실행 전). 2) 사용자에게 브랜치 비용 확인 후 승인받아 create_branch. 3) 브랜치에서 apply_migration 후 list_tables verbose, pg_policies, information_schema.column_privileges 로 확인: role 컬럼 존재, email 없음, authenticated 의 update 가능 컬럼이 4개뿐. 4) get_advisors 확인. 5) 승인 후 원격 apply_migration, 브랜치 삭제 여부는 사용자에게 확인. 6) list_migrations 로 version 대조 후 파일명 일치시킴.",
+      "verificationCriteria": "원격 profiles에 role 컬럼이 있고 email이 없으며 기존 1행(full_name 조민제)이 보존된다. anon 은 profiles 에 대한 어떤 권한도 없고 authenticated 의 UPDATE 가능 컬럼이 full_name, avatar_url, username, bio 뿐이며 INSERT/DELETE/TRUNCATE 권한이 없다(information_schema.column_privileges 와 table_privileges 로 확인). handle_new_user 가 null 안전하고 on conflict do nothing 이다. list_migrations 와 저장소 SQL 파일이 일치한다. 사용자 승인 없이 브랜치나 원격 변경이 실행되지 않았다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "e4ff7dd4-7f1f-4404-a321-40eb4b3acfa6",
+      "name": "Task006-3 마이그레이션 events·event_series·participations·announcements",
+      "description": "이벤트 계열 테이블 생성. event_series(주간 반복 규칙: host_id, weekday, until 등 PRD 기준), events(id uuid, host_id, series_id, title, description, starts_at timestamptz, location, capacity, rsvp_deadline, share_code UNIQUE 기본값 translate(encode(extensions.gen_random_bytes(9),'base64'),'+/','-_'), transfer_account text, created_at, updated_at; CHECK capacity>=1 및 rsvp_deadline<starts_at), participations(event_id,user_id PK, status participation_status, attended boolean, created_at), announcements(id, event_id, author_id, body, pinned, created_at). updated_at 트리거는 기존 set_updated_at()을 재사용한다. 각 테이블은 생성 즉시 enable row level security 하고 anon 권한을 REVOKE 한다. 정책은 이 단계에서 만들지 않고 Task006-5에서 한 번에 만든다(정책 없음 = 접근 불가 상태 유지).",
+      "notes": "share_code는 링크 공유 후 포맷 변경이 불가능하므로 이 단계에서 확정한다. 상태 기계 쓰기 정책은 만들지 않는다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "ed6452d2-367c-4251-94bc-f2c88b3903e8"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:30:38.775Z",
+      "relatedFiles": [
+        {
+          "path": "lib/types/event.ts",
+          "type": "REFERENCE",
+          "description": "Event, EventSeries 필드"
+        },
+        {
+          "path": "lib/types/participation.ts",
+          "type": "REFERENCE",
+          "description": "Participation 필드"
+        },
+        {
+          "path": "docs/PRD.md",
+          "type": "REFERENCE",
+          "description": "데이터 모델 기준"
+        },
+        {
+          "path": "supabase/migrations",
+          "type": "CREATE",
+          "description": "마이그레이션 SQL 저장"
+        }
+      ],
+      "implementationGuide": "PRD 데이터 모델과 lib/types/event.ts, participation.ts, announcement.ts 를 읽고 컬럼명과 타입을 일치시킨다. 마이그레이션 2개 이하로 나눠 apply_migration 하고 같은 SQL을 supabase/migrations 에 저장. 인덱스: events(host_id), events(series_id), events(starts_at), participations(user_id), participations(event_id,status,created_at), announcements(event_id,pinned desc,created_at desc). FK는 auth.users 와 profiles 중 PRD 기준으로 일관되게 선택(profiles.id 참조 권장).",
+      "verificationCriteria": "list_tables verbose 에서 4개 테이블이 RLS on 으로 보이고 CHECK, UNIQUE, FK, 인덱스가 계획대로 존재한다. anon 권한이 없다. get_advisors 에 새 ERROR가 없다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "9828e1f3-cfd2-47ac-8aa5-aa6952db7baf",
+      "name": "Task006-4 마이그레이션 carpool·expenses·settlement_shares",
+      "description": "카풀과 정산 테이블 생성. carpool_rides(id, event_id, driver_id, origin, depart_at, seats CHECK >=1, created_at), carpool_passengers(ride_id, user_id, event_id, status passenger_status, created_at; PK (ride_id,user_id); 복합 FK (ride_id,event_id)→carpool_rides(id,event_id) 를 위해 carpool_rides에 UNIQUE(id,event_id) 추가), expenses(id, event_id, name, amount CHECK >0, payer_id, created_at), settlement_shares(event_id,user_id PK, amount, status payment_status default unpaid, marked_at, confirmed_at). 카풀 memo 컬럼은 추가하지 않는다. 각 테이블 생성 즉시 RLS 활성화와 anon REVOKE, 정책은 Task006-5에서 만든다.",
+      "notes": "payment_status enum 은 Task006-2에서 이미 생성됨. 입금 전환 규칙(마킹, 확인, 잠금)은 Task 011 RPC에서 구현하므로 여기서는 컬럼만 둔다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "e4ff7dd4-7f1f-4404-a321-40eb4b3acfa6"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:30:42.687Z",
+      "relatedFiles": [
+        {
+          "path": "lib/types/carpool.ts",
+          "type": "REFERENCE",
+          "description": "CarpoolRide, CarpoolPassenger"
+        },
+        {
+          "path": "lib/types/settlement.ts",
+          "type": "REFERENCE",
+          "description": "Expense, SettlementShare 현재 구조"
+        },
+        {
+          "path": "lib/settlement.ts",
+          "type": "REFERENCE",
+          "description": "calcShares, sumSharesByUser 재사용"
+        },
+        {
+          "path": "supabase/migrations",
+          "type": "CREATE",
+          "description": "마이그레이션 SQL 저장"
+        }
+      ],
+      "implementationGuide": "lib/types/carpool.ts, settlement.ts 와 PRD를 읽고 컬럼을 맞춘다. settlement_shares 는 사용자별 총 분담액만 저장하고 항목별 내역은 lib/settlement.ts 의 calcShares 로 계산하는 구조임을 SQL 주석으로 남긴다. 인덱스: carpool_rides(event_id), carpool_passengers(ride_id), carpool_passengers(user_id), carpool_passengers(event_id), expenses(event_id), settlement_shares(user_id). apply_migration 후 SQL을 supabase/migrations 에 저장.",
+      "verificationCriteria": "3개 테이블이 RLS on 이고 복합 FK, CHECK, PK가 계획대로 존재한다. settlement_shares 가 (event_id,user_id) PK 이다. get_advisors 에 새 ERROR가 없다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "58928355-773e-412b-95de-42b16561d6c1",
+      "name": "Task006-5 마이그레이션 RLS 헬퍼·정책·공개 초대 RPC와 브랜치 검증",
+      "description": "권한 계층 마이그레이션. 1) private 스키마 SECURITY DEFINER 헬퍼(set search_path 빈 값): is_admin(), is_event_host(event_id), is_event_member(event_id), shares_event_with(uid). 2) 정책(모두 to authenticated, (select auth.uid()) 래핑): profiles SELECT 본인/같은 이벤트 참여자/admin 과 본인 UPDATE, events SELECT 호스트/멤버/admin 및 INSERT host_id=uid 및 UPDATE·DELETE 호스트, event_series 호스트/admin, participations SELECT 멤버/admin만(쓰기 없음), announcements SELECT 멤버/admin 및 호스트 쓰기, carpool_rides SELECT 멤버/admin 및 운전자(멤버) 쓰기와 호스트 삭제, carpool_passengers SELECT 멤버/admin만, expenses SELECT 멤버/admin 및 호스트 쓰기, settlement_shares SELECT 본인/호스트/admin만. 3) public.get_event_invite(p_code text) SECURITY DEFINER RPC: 제목, 설명, 일시, 장소, 정원, 마감, 주최자 full_name, 참석 인원만 반환하고 host_id, transfer_account, 참석자 목록은 반환하지 않으며 revoke from public 후 anon, authenticated 에 execute 를 grant 한다. 이 마이그레이션은 되돌리기 어려우므로 Task006-2에서 만든 브랜치 또는 새 브랜치에서 먼저 검증한다(비용 확인 후 사용자 승인).",
+      "notes": "get_event_invite 는 advisor 의 anon 실행 가능 SECURITY DEFINER 함수 경고가 날 수 있으며 의도된 것이므로 문서화한다. events 와 participations 정책이 서로 참조하면 42P17 재귀가 나므로 반드시 헬퍼 함수를 경유한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "9828e1f3-cfd2-47ac-8aa5-aa6952db7baf"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:25:35.246Z",
+      "relatedFiles": [
+        {
+          "path": "supabase/migrations",
+          "type": "CREATE",
+          "description": "RLS와 RPC SQL 저장"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "REFERENCE",
+          "description": "공개 초대 화면이 필요로 하는 필드 확인"
+        }
+      ],
+      "implementationGuide": "SQL 초안을 supabase/migrations/<version>_rls_helpers_policies.sql 과 <version>_public_invite_function.sql 로 작성. 브랜치에서 apply_migration 후 pg_policies 로 정책 목록 확인, has_function_privilege 로 anon 이 헬퍼에는 execute 불가이고 get_event_invite 에는 가능한지 확인. 승인 후 원격 적용. 정책 컬럼 인덱스는 Task006-3, 4에서 만든 것을 재사용하고 부족하면 추가.",
+      "verificationCriteria": "모든 public 테이블에 RLS 가 켜져 있고 pg_policies 가 계획 표와 일치한다. anon 이 테이블을 직접 읽을 수 없고 get_event_invite 만 호출 가능하다. 정책 재귀 오류가 없다. 사용자 승인 후에만 적용되었다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "a669f339-79ec-4d84-9a2a-219d2c4ea5a6",
+      "name": "Task006-6 RLS 동작 검증과 advisors 점검",
+      "description": "정책이 의도대로 동작하는지 롤백되는 트랜잭션에서 검증한다. 역할별(호스트, 참여자, 제3자, admin, anon) 조회 시나리오와 자기 role UPDATE 거부, 비호스트의 events UPDATE 거부, participations 직접 INSERT 거부, get_event_invite 반환 필드 확인을 수행한다. 테스트 데이터 삽입이 필요하면 반드시 사용자 승인을 받고 begin ... rollback 안에서만 실행한다. get_advisors 보안과 성능을 확인하고 새 경고를 분류한다(예상: leaked password protection 기존 1건, get_event_invite anon 실행 가능 1건). 결과를 표로 기록한다.",
+      "notes": "production 데이터에 영구 변경을 남기지 않는다. 검증용 사용자 uuid 는 임의 값으로 대체 가능하나 auth.users FK 때문에 실제 insert 가 필요하면 승인 후 롤백 트랜잭션에서만 한다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "58928355-773e-412b-95de-42b16561d6c1"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:25:35.246Z",
+      "relatedFiles": [
+        {
+          "path": "supabase/migrations",
+          "type": "REFERENCE",
+          "description": "적용된 정책 SQL"
+        }
+      ],
+      "implementationGuide": "execute_sql 한 번에 begin; set local role authenticated; select set_config('request.jwt.claims', json_build_object('sub', <uuid>)::text, true); ... rollback; 형태로 실행. 시나리오별 기대 결과와 실제 결과를 비교해 표로 정리. 실패하면 원인을 정책 오류, 헬퍼 오류, 시나리오 오류로 분류하고 Task006-5 SQL 을 새 마이그레이션으로 수정(기존 마이그레이션 파일은 수정하지 않음).",
+      "verificationCriteria": "모든 시나리오의 기대와 실제가 일치하고 표로 기록된다. get_advisors 에 예상 외 ERROR 또는 WARN 이 없다. 검증 후 DB에 테스트 데이터가 남지 않았다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "c0bf67e2-8499-4b15-a2e4-6ab6c7e1f3ae",
+      "name": "Task006-7 타입 생성과 클라이언트 제네릭·lib/types 정합화",
+      "description": "코드 연동. 1) generate_typescript_types 결과를 lib/supabase/database.types.ts 에 저장(직접 수정 금지)하고 .prettierignore 에 추가해 format:check 가 실패하지 않게 하며 ESLint 대상 여부도 확인한다. 2) lib/supabase/server.ts, client.ts, proxy.ts 의 createServerClient 와 createBrowserClient 에 Database 제네릭을 연결한다(proxy.ts 는 createServerClient 와 getClaims() 사이에 다른 코드를 넣지 않고 getClaims() 를 유지). 3) lib/types 를 Tables, Enums 파생으로 정합화한다: ParticipationStatus, PassengerStatus, PaymentStatus, UserRole 은 Enums 에서 파생, Event 타입을 MeetupEvent 로 개명(3개 파일 7곳), 정산 타입을 사용자별 1행 구조로 변경. Profile.name 과 DB full_name 매핑은 이 Task에서 하지 않고 DB 컬럼명을 유지한다. 4) 목 데이터와 UI 동작은 바꾸지 않고 타입 변경으로 깨지는 부분(lib/mocks/settlement.ts 등)만 최소 수정한다.",
+      "notes": "DB 변경이 없는 코드 작업이므로 Task006-5 이후 Task006-6 과 병행 가능하지만 스키마 확정 후에 진행한다. 기존 미커밋 변경을 덮어쓰지 않는다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "58928355-773e-412b-95de-42b16561d6c1"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:25:35.246Z",
+      "relatedFiles": [
+        {
+          "path": "lib/supabase/database.types.ts",
+          "type": "CREATE",
+          "description": "생성된 DB 타입"
+        },
+        {
+          "path": "lib/supabase/server.ts",
+          "type": "TO_MODIFY",
+          "description": "Database 제네릭 연결"
+        },
+        {
+          "path": "lib/supabase/client.ts",
+          "type": "TO_MODIFY",
+          "description": "Database 제네릭 연결"
+        },
+        {
+          "path": "lib/supabase/proxy.ts",
+          "type": "TO_MODIFY",
+          "description": "Database 제네릭 연결, getClaims 유지"
+        },
+        {
+          "path": "lib/types/settlement.ts",
+          "type": "TO_MODIFY",
+          "description": "사용자별 정산 구조"
+        },
+        {
+          "path": "lib/types/event.ts",
+          "type": "TO_MODIFY",
+          "description": "Event 를 MeetupEvent 로 개명"
+        },
+        {
+          "path": ".prettierignore",
+          "type": "TO_MODIFY",
+          "description": "생성 타입 제외"
+        },
+        {
+          "path": "lib/mocks/settlement.ts",
+          "type": "TO_MODIFY",
+          "description": "타입 변경으로 깨지는 부분만 최소 수정"
+        }
+      ],
+      "implementationGuide": "generate_typescript_types 호출 후 파일 저장. grep 으로 Event 타입 사용처를 찾아 MeetupEvent 로 바꾸고 npm run typecheck 로 깨지는 곳을 확인. 정산 타입 변경 시 lib/settlement.ts 의 calcShares, sumSharesByUser 시그니처는 유지. components/ui 는 수정하지 않는다.",
+      "verificationCriteria": "database.types.ts 가 생성되어 있고 세 클라이언트가 Database 제네릭을 사용한다. npm run typecheck 와 lint 가 통과하고 UI 동작 변경이 없다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
+    },
+    {
+      "id": "722c6b3c-3eec-4922-a7d7-f70ffe46b78e",
+      "name": "Task006-8 마무리 검증과 첫 admin 지정·ROADMAP 완료 반영",
+      "description": "마무리. 1) npm run check-all 후 npm run build 를 순서대로 실행해 통과를 확인하고 결과를 그대로 보고한다. 2) 회귀 확인: 기존 Google 로그인과 로그아웃, 신규 가입 시 handle_new_user 트리거 동작, /admin, /events, /e/futsal1114 더미 화면. 로그인이 필요한 화면은 사용자가 직접 로그인한 세션으로 확인하며 인증 우회 코드는 만들지 않는다. 3) 첫 admin 지정은 데이터 변경이므로 사용자에게 대상 계정과 SQL(update public.profiles set role='admin' where id=...)을 보여주고 명시적 승인을 받은 뒤에만 실행한다. 4) list_migrations 와 supabase/migrations 파일을 대조한다. 5) docs/ROADMAP.md Task 006 에 완료 표시를 하고 결과와 Task 007 입력(isAdmin 과 CURRENT_USER_ID 교체 지점, lib/auth/session.ts 신설, UUID 검증, 캐시용 anon 클라이언트)을 기록한다. 커밋은 사용자 요청 시에만 한다.",
+      "notes": "문서만 수정한 경우가 아니므로 check-all 과 build 가 필수이다. 통과하지 못한 항목은 숨기지 않는다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "a669f339-79ec-4d84-9a2a-219d2c4ea5a6"
+        },
+        {
+          "taskId": "c0bf67e2-8499-4b15-a2e4-6ab6c7e1f3ae"
+        }
+      ],
+      "createdAt": "2026-11-07T13:25:35.246Z",
+      "updatedAt": "2026-11-07T13:25:35.246Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 006 완료 표시와 결과 기록"
+        },
+        {
+          "path": "supabase/migrations",
+          "type": "REFERENCE",
+          "description": "적용 이력과 대조"
+        }
+      ],
+      "implementationGuide": "npm run check-all; npm run build 순서 실행. 실패 시 원인 수정 후 처음부터 재실행. 사용자 확인 항목을 목록으로 정리해 전달. 승인 후 execute_sql 로 admin 지정. ROADMAP Edit.",
+      "verificationCriteria": "check-all 과 build 가 통과한다. 로그인, 가입 트리거, 더미 화면 회귀가 없다. list_migrations 와 저장소 SQL 이 일치한다. 첫 admin 은 사용자 승인 후에만 지정되었다. ROADMAP 에 완료와 Task 007 입력이 기록되었다.",
+      "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다."
     }
   ]
 }
