@@ -43,3 +43,6 @@ next-env.d.ts
 
 # playwright mcp artifacts
 .playwright-mcp
+
+# next dev가 자동 생성하는 AI 에이전트 안내 (CLAUDE.md로 대체)
+AGENTS.md
