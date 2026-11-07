@@ -1,5 +1,6 @@
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PageContainer } from "@/components/page-container";
+import { SignedInLogout } from "@/components/signed-in-logout";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_AFTER_LOGIN, EVENTS_HOME } from "@/lib/auth/safe-next";
@@ -41,7 +42,12 @@ export default function Home() {
         <Link href="/" className="font-semibold">
           모임 이벤트
         </Link>
-        <ThemeSwitcher />
+        <div className="flex items-center">
+          <Suspense fallback={null}>
+            <SignedInLogout />
+          </Suspense>
+          <ThemeSwitcher />
+        </div>
       </header>
       <main className="mx-auto flex w-full flex-1 flex-col justify-center gap-8 px-4 pb-16">
         <div className="flex flex-col gap-3 text-center">

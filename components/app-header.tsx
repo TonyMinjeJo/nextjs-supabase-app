@@ -8,20 +8,31 @@ import Link from "next/link";
 // 이 영역은 proxy에서 로그인이 보장되므로 서버 인증 조회 없이 정적으로 렌더링합니다.
 // "관리자" 링크는 더미(mocks)의 현재 사용자 role로만 판단합니다.
 // Phase 3에서 실제 role 조회(서버)로 교체 예정입니다.
+// 모바일(sm 미만)은 2줄: 1줄 로고 + 관리자·로그아웃·테마, 2줄 내 이벤트·이벤트 만들기.
+// sm 이상은 1줄입니다. DOM 순서는 로고 → nav → 액션이며, 모바일은 order로 시각 순서만 바꿉니다.
+// (모바일 포커스 순서와 시각 순서가 다른 것은 의도된 트레이드오프)
 export function AppHeader() {
   return (
     <header className="w-full border-b border-b-foreground/10">
-      <div className="mx-auto flex h-14 w-full items-center justify-between gap-2 px-4">
-        <Link href="/events" className="shrink-0 font-semibold">
+      <div className="mx-auto flex w-full flex-wrap items-center justify-between gap-x-2 px-4 py-1 sm:h-14 sm:flex-nowrap sm:py-0">
+        <Link
+          href="/events"
+          className="order-1 flex h-10 shrink-0 items-center font-semibold sm:h-auto"
+        >
           모임 이벤트
         </Link>
-        <nav className="flex items-center text-sm">
+        <nav
+          aria-label="주 메뉴"
+          className="order-3 flex w-full items-center text-sm sm:order-2 sm:w-auto"
+        >
           <Button asChild variant="ghost" size="sm" className="px-2">
             <Link href="/events">내 이벤트</Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="px-2">
             <Link href="/events/new">이벤트 만들기</Link>
           </Button>
+        </nav>
+        <div className="order-2 flex items-center text-sm sm:order-3">
           {isAdmin() && (
             <Button asChild variant="ghost" size="sm" className="px-2">
               <Link href="/admin">관리자</Link>
@@ -29,7 +40,7 @@ export function AppHeader() {
           )}
           <LogoutButton />
           <ThemeSwitcher />
-        </nav>
+        </div>
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoutButton } from "@/components/logout-button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,6 +46,7 @@ export function AdminNav() {
       >
         서비스로 돌아가기
       </Link>
+      <LogoutButton className="h-auto shrink-0 justify-start px-3 py-2 font-normal text-muted-foreground" />
     </nav>
   );
 }
