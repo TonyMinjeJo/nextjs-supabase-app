@@ -1,5 +1,8 @@
-/** 로그인 후 기본 이동 경로 (내 이벤트) */
-export const DEFAULT_AFTER_LOGIN = "/events";
+/** 로그인 후 기본 이동 경로 (홈) */
+export const DEFAULT_AFTER_LOGIN = "/";
+
+/** 내 이벤트 목록 경로 */
+export const EVENTS_HOME = "/events";
 
 /**
  * 로그인 후 이동 경로(`next`)를 검증합니다. (open-redirect 방어)

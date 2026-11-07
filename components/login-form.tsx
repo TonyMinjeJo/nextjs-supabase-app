@@ -1,5 +1,6 @@
 "use client";
 
+import { toKoreanAuthError } from "@/lib/auth/error-message";
 import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -20,9 +21,9 @@ import { useState } from "react";
 
 type LoginFormProps = React.ComponentPropsWithoutRef<"div"> & {
   next?: string;
-  /** 카드 제목 (기본: "Login") */
+  /** 카드 제목 (기본: "로그인") */
   title?: string;
-  /** 카드 설명 (기본: 영어 안내 문구) */
+  /** 카드 설명 (기본: 한국어 안내 문구) */
   description?: string;
   /** 회원가입 링크 표시 여부 (기본: true) */
   showSignUp?: boolean;
@@ -35,8 +36,8 @@ type LoginFormProps = React.ComponentPropsWithoutRef<"div"> & {
 export function LoginForm({
   className,
   next = DEFAULT_AFTER_LOGIN,
-  title = "Login",
-  description = "Enter your email below to login to your account",
+  title = "로그인",
+  description = "이메일로 계정에 로그인하세요",
   showSignUp = true,
   showForgot = true,
   footerLink,
@@ -60,10 +61,10 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // 로그인 성공 시 검증된 next 경로(기본: 내 이벤트)로 이동합니다.
+      // 로그인 성공 시 검증된 next 경로(기본: 홈 `/`)로 이동합니다.
       router.push(next);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(toKoreanAuthError(error));
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +87,7 @@ export function LoginForm({
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">이메일</Label>
                 <Input
                   id="email"
                   type="email"
@@ -98,13 +99,13 @@ export function LoginForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">비밀번호</Label>
                   {showForgot && (
                     <Link
                       href="/auth/forgot-password"
                       className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                     >
-                      Forgot your password?
+                      비밀번호를 잊으셨나요?
                     </Link>
                   )}
                 </div>
@@ -118,17 +119,17 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "로그인 중..." : "로그인"}
               </Button>
             </div>
             {showSignUp && (
               <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
+                계정이 없으신가요?{" "}
                 <Link
                   href="/auth/sign-up"
                   className="underline underline-offset-4"
                 >
-                  Sign up
+                  회원가입
                 </Link>
               </div>
             )}

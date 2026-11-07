@@ -2,7 +2,7 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PageContainer } from "@/components/page-container";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_AFTER_LOGIN } from "@/lib/auth/safe-next";
+import { DEFAULT_AFTER_LOGIN, EVENTS_HOME } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
@@ -24,7 +24,7 @@ async function StartButton() {
   if (data?.claims) {
     return (
       <Button asChild className="w-full">
-        <Link href={DEFAULT_AFTER_LOGIN}>내 이벤트로 이동</Link>
+        <Link href={EVENTS_HOME}>내 이벤트로 이동</Link>
       </Button>
     );
   }
