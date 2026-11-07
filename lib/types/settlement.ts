@@ -1,34 +1,16 @@
-/** 비용 항목 (expenses) */
-export interface Expense {
-  id: string;
-  event_id: string;
-  /** 결제자 */
-  payer_id: string;
-  title: string;
-  /** 금액 (정수 원 단위) */
-  amount: number;
-}
+import type { Enums, Tables } from "@/lib/supabase/database.types";
 
-/** 정산 분담 (settlement_shares) */
-export interface SettlementShare {
-  expense_id: string;
-  user_id: string;
-  /** 분담 금액 (정수 원 단위) */
-  amount: number;
-  /** 입금 표시 (참여자) */
-  paid_marked: boolean;
-  /** 입금 확인 (주최자) */
-  confirmed: boolean;
-}
+/** 비용 항목 (expenses). 금액은 정수 원 단위입니다. */
+export type Expense = Pick<
+  Tables<"expenses">,
+  "id" | "event_id" | "payer_id" | "name" | "amount"
+>;
 
 /** 입금 상태: 미입금 → 입금 표시 → 확인 완료 */
-export type PaymentStatus = "unpaid" | "marked" | "confirmed";
+export type PaymentStatus = Enums<"payment_status">;
 
-/** paid_marked / confirmed 조합에서 입금 상태를 파생합니다. */
-export function getPaymentStatus(
-  share: Pick<SettlementShare, "paid_marked" | "confirmed">,
-): PaymentStatus {
-  if (share.confirmed) return "confirmed";
-  if (share.paid_marked) return "marked";
-  return "unpaid";
-}
+/**
+ * 정산 분담 (settlement_shares). 이벤트·사용자별 1행이며 amount는 총 분담액입니다.
+ * 항목별 분담 내역은 DB에 두지 않고 lib/settlement.ts의 calcShares로 계산합니다.
+ */
+export type SettlementShare = Tables<"settlement_shares">;

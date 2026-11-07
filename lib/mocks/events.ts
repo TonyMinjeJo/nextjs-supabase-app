@@ -1,8 +1,8 @@
-import type { Event, EventCardProps } from "@/lib/types";
+import type { MeetupEvent, EventCardProps } from "@/lib/types";
 import { getGoingCount, getMyStatus, participations } from "./participations";
 
 // 시각은 한국 시간(+09:00) ISO 문자열. 예정/지난 구분은 화면에서 현재 시각과 비교합니다.
-export const events: Event[] = [
+export const events: MeetupEvent[] = [
   {
     id: "e1",
     host_id: "u1",
@@ -65,11 +65,11 @@ export const events: Event[] = [
   },
 ];
 
-export function getEventById(id: string): Event | undefined {
+export function getEventById(id: string): MeetupEvent | undefined {
   return events.find((event) => event.id === id);
 }
 
-export function getEventByCode(code: string): Event | undefined {
+export function getEventByCode(code: string): MeetupEvent | undefined {
   return events.find((event) => event.share_code === code);
 }
 

@@ -1,5 +1,5 @@
 import type { CarpoolRide } from "./carpool";
-import type { Event } from "./event";
+import type { MeetupEvent } from "./event";
 import type { ParticipationStatus } from "./participation";
 import type { PaymentStatus } from "./settlement";
 
@@ -9,7 +9,7 @@ import type { PaymentStatus } from "./settlement";
 /** 이벤트 카드 (내 이벤트 목록) */
 export interface EventCardProps {
   event: Pick<
-    Event,
+    MeetupEvent,
     "id" | "title" | "starts_at" | "location" | "capacity" | "share_code"
   >;
   /** 현재 참석(going) 인원 */

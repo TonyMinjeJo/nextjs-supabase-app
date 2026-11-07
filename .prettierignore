@@ -9,3 +9,4 @@ shrimp_data
 .claude
 docs
 .playwright-mcp
+lib/supabase/database.types.ts

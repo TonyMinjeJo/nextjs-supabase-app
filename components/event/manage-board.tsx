@@ -79,7 +79,7 @@ export function ManageBoard({
     formState: { errors },
   } = useForm<ExpenseFormInput>({
     resolver: zodResolver(expenseFormSchema),
-    defaultValues: { title: "", amount: undefined, payerId: "" },
+    defaultValues: { name: "", amount: undefined, payerId: "" },
   });
 
   function addExpense(values: ExpenseFormInput) {
@@ -89,11 +89,11 @@ export function ManageBoard({
         id: crypto.randomUUID(),
         event_id: eventId,
         payer_id: values.payerId,
-        title: values.title,
+        name: values.name,
         amount: values.amount,
       },
     ]);
-    reset({ title: "", amount: undefined, payerId: "" });
+    reset({ name: "", amount: undefined, payerId: "" });
     toast.success("비용 항목을 추가했어요.");
   }
 
@@ -191,7 +191,7 @@ export function ManageBoard({
                   >
                     <div className="text-sm">
                       <p className="font-medium">
-                        {item.title} · {formatWon(item.amount)}
+                        {item.name} · {formatWon(item.amount)}
                       </p>
                       <p className="text-muted-foreground">
                         결제 {nameOf(item.payer_id)}
@@ -205,7 +205,7 @@ export function ManageBoard({
                       variant="ghost"
                       size="icon"
                       className="size-11 shrink-0"
-                      aria-label={`${item.title} 삭제`}
+                      aria-label={`${item.name} 삭제`}
                       disabled={locked}
                       onClick={() =>
                         setExpenses(expenses.filter((e) => e.id !== item.id))
@@ -235,10 +235,10 @@ export function ManageBoard({
                   id="expense-title"
                   className="h-11"
                   placeholder="예: 구장 대관"
-                  aria-invalid={!!errors.title}
-                  {...register("title")}
+                  aria-invalid={!!errors.name}
+                  {...register("name")}
                 />
-                <FieldError message={errors.title?.message} />
+                <FieldError message={errors.name?.message} />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="expense-amount">금액 (원)</Label>

@@ -1,24 +1,13 @@
+import type { Enums, Tables } from "@/lib/supabase/database.types";
+
 /** 참석 상태 */
-export type ParticipationStatus = "going" | "not_going" | "waitlist";
+export type ParticipationStatus = Enums<"participation_status">;
 
-/** 참석 (participations) */
-export interface Participation {
-  event_id: string;
-  user_id: string;
-  status: ParticipationStatus;
-  /** 출석 여부 */
-  attended: boolean;
-  /** 응답 시각 (대기 순번 기준: 먼저 응답한 순) */
-  created_at: string;
-}
+/** 참석 (participations). created_at은 대기 순번 기준(먼저 응답한 순)입니다. */
+export type Participation = Tables<"participations">;
 
-/** 공지 (announcements) */
-export interface Announcement {
-  id: string;
-  event_id: string;
-  body: string;
-  /** 상단 고정 */
-  pinned: boolean;
-  /** 작성 시각 (최신순 정렬 기준) */
-  created_at: string;
-}
+/** 공지 (announcements). 목 데이터는 author_id 없이 사용합니다. */
+export type Announcement = Pick<
+  Tables<"announcements">,
+  "id" | "event_id" | "body" | "pinned" | "created_at"
+>;

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // 비용 항목 입력 검증 스키마. 금액은 양의 정수(원 단위)입니다.
 export const expenseFormSchema = z.object({
-  title: z
+  name: z
     .string()
     .trim()
     .min(1, "항목명을 입력해 주세요.")
