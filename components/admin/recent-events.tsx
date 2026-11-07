@@ -68,8 +68,8 @@ export function RecentEvents({ rows }: RecentEventsProps) {
       </ul>
 
       {/* 표 (lg 이상) */}
-      <div className="hidden rounded-lg border lg:block">
-        <table className="w-full text-sm">
+      <div className="hidden overflow-x-auto rounded-lg border lg:block">
+        <table className="w-full min-w-[800px] text-sm">
           <caption className="sr-only">최근 이벤트 5건</caption>
           <thead className="border-b bg-muted/50 text-left text-muted-foreground">
             <tr>

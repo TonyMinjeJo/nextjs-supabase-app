@@ -106,8 +106,8 @@ export function EventTable({ rows }: EventTableProps) {
       ) : (
         <>
           {/* lg 이상: 표 */}
-          <div className="hidden overflow-hidden rounded-lg border lg:block">
-            <table className="w-full text-left text-sm">
+          <div className="hidden overflow-x-auto rounded-lg border lg:block">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <caption className="sr-only">
                 이벤트 목록: 제목, 주최자, 일시, 참석 인원, 정산 상태, 공유 코드
               </caption>

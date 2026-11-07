@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -5,6 +6,8 @@ import { RecentEvents } from "@/components/admin/recent-events";
 import { StatCard } from "@/components/admin/stat-card";
 import { getAdminEventRows, getAdminStats } from "@/lib/mocks/admin";
 import { getNowMs } from "@/lib/now";
+
+export const metadata: Metadata = { title: "관리자 대시보드" };
 
 // 예정/지난 구분이 현재 시각에 의존하므로 요청 시점에 렌더링합니다. (Cache Components)
 async function DashboardContent() {

@@ -1,9 +1,8 @@
-import type { PaymentStatus } from "@/lib/types";
+import type { PaymentStatus, UserRole } from "@/lib/types";
 import { events } from "./events";
 import { getGoingCount, participations } from "./participations";
 import { getSettlementRows } from "./settlement";
 import { getUserName, users } from "./users";
-import type { UserRole } from "@/lib/types";
 
 // 운영자(admin) 화면용 집계 (Phase 2 더미). Phase 3에서 DB 집계 쿼리로 교체합니다.
 // 순수 함수입니다. "예정/지난" 판단용 현재 시각은 호출 측에서
@@ -52,6 +51,8 @@ export interface AdminUserRow {
 function summarizeSettlement(eventId: string): SettlementSummary {
   const summary: SettlementSummary = { unpaid: 0, marked: 0, confirmed: 0 };
   for (const row of getSettlementRows(eventId)) {
+    // 0원 행(결제자 본인 등)은 입금 대상이 아니므로 집계에서 제외합니다.
+    if (row.amount <= 0) continue;
     const status: PaymentStatus = row.paymentStatus;
     summary[status] += 1;
   }
@@ -92,9 +93,10 @@ export function getAdminUserRows(): AdminUserRow[] {
 export function getAdminStats(nowMs: number): AdminStats {
   const rows = getAdminEventRows(nowMs);
   const upcomingEvents = rows.filter((row) => row.isUpcoming).length;
-  const rates = rows.map((row) =>
-    row.capacity > 0 ? row.goingCount / row.capacity : 0,
-  );
+  // 정원이 0 이하인 이벤트는 평균에서 제외하고, 이벤트별 참석률은 100%로 제한합니다.
+  const rates = rows
+    .filter((row) => row.capacity > 0)
+    .map((row) => Math.min(1, row.goingCount / row.capacity));
   const avg = rates.length
     ? rates.reduce((sum, rate) => sum + rate, 0) / rates.length
     : 0;

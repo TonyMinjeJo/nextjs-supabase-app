@@ -1,6 +1,9 @@
 import { UserTable } from "@/components/admin/user-table";
 import { getAdminUserRows } from "@/lib/mocks/admin";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "사용자 관리" };
 
 async function UsersContent() {
   return <UserTable rows={getAdminUserRows()} />;
