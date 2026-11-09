@@ -19,10 +19,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type SignUpFormProps = React.ComponentPropsWithoutRef<"div"> & {
+  /** 가입·로그인 후 돌아갈 경로. 호출하는 쪽에서 getSafeNext로 검증해 전달합니다. */
+  next?: string;
+};
+
 export function SignUpForm({
   className,
+  next = DEFAULT_AFTER_LOGIN,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: SignUpFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -47,7 +53,7 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}${DEFAULT_AFTER_LOGIN}`,
+          emailRedirectTo: `${window.location.origin}${next}`,
         },
       });
       if (error) throw error;
@@ -67,7 +73,7 @@ export function SignUpForm({
           <CardDescription>새 계정을 만드세요</CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleSignInButton />
+          <GoogleSignInButton next={next} />
           <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
             또는
@@ -117,7 +123,14 @@ export function SignUpForm({
             </div>
             <div className="mt-4 text-center text-sm">
               이미 계정이 있으신가요?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link
+                href={
+                  next === DEFAULT_AFTER_LOGIN
+                    ? "/auth/login"
+                    : `/auth/login?next=${encodeURIComponent(next)}`
+                }
+                className="underline underline-offset-4"
+              >
                 로그인
               </Link>
             </div>

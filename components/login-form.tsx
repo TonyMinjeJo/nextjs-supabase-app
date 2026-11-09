@@ -126,7 +126,11 @@ export function LoginForm({
               <div className="mt-4 text-center text-sm">
                 계정이 없으신가요?{" "}
                 <Link
-                  href="/auth/sign-up"
+                  href={
+                    next === DEFAULT_AFTER_LOGIN
+                      ? "/auth/sign-up"
+                      : `/auth/sign-up?next=${encodeURIComponent(next)}`
+                  }
                   className="underline underline-offset-4"
                 >
                   회원가입
