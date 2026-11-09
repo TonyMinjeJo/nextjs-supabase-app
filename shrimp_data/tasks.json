@@ -1626,6 +1626,146 @@
       "analysisResult": "이벤트 삭제를 '취소됨' 상태 전환(events.canceled_at)으로 구현한다. 주최자만 취소·수정할 수 있고(RLS와 RPC), expenses 또는 settlement_shares 행이 있으면 취소를 막으며, events 직접 DELETE 우회 경로를 제거한다. Task007-2(이벤트 생성 action, 완료)에 의존하고 Task 008 체인과는 독립이다.",
       "summary": "2026-11-09 TC-007-09~13을 주최자(Google admin)와 비주최자(이메일) 세션으로 모두 통과했다. 취소됨 뱃지와 초대 응답 차단, 비주최자 not_host 거부, 비용 있는 이벤트 취소 차단 토스트, 직접 DELETE·canceled_at UPDATE 403 거부를 확인했다. 375px에서 주최자 버튼 줄이 가로로 넘치는 구현 버그를 찾아 flex-wrap으로 고쳤다. docs/PRD.md에 취소·삭제 규칙을 반영하고 ROADMAP을 정리했으며 npm run check-all과 npm run build가 통과했다. 한계: 비용 입력 UI가 없어 TC-007-11용 비용은 PostgREST로 직접 넣었고, 시험용 이벤트 A·B가 DB에 남아 있다.",
       "completedAt": "2026-11-09T11:51:40.500Z"
+    },
+    {
+      "id": "63f71d79-10bd-4e0c-981c-9e9398484387",
+      "name": "Task009-1 공지 검증 스키마·데이터 계층·서버 액션",
+      "description": "lib/validations/announcement.ts(ANNOUNCEMENT_MAX_LENGTH=1000, announcementBodySchema는 trim 후 1~1000자 한국어 메시지, announcementFormSchema, createAnnouncementSchema {eventId uuid, body}, pinAnnouncementSchema {announcementId uuid, pinned boolean})와 lib/data/announcements.ts(getAnnouncements(eventId): isUuid 가드, createClient, announcements에서 id,event_id,body,pinned,created_at 조회, pinned desc와 created_at desc 정렬, 오류는 throw)와 app/(app)/events/announcement-actions.ts('use server')를 만든다. 액션은 createAnnouncement(eventId, body), setAnnouncementPinned(announcementId, pinned), deleteAnnouncement(announcementId). 순서는 입력 Zod 재검증, getSessionUser, 취소 여부 확인, DB 호출, 한국어 오류 변환, ActionResult<null> 반환. create는 events.canceled_at을 maybeSingle로 조회해 없으면 이벤트를 찾을 수 없어요, 취소됐으면 취소된 이벤트에는 공지를 쓸 수 없어요로 거부하고 insert의 author_id는 항상 세션 user.id를 쓴다(42501이면 공지를 작성할 권한이 없어요). pin과 delete는 announcements.select('id, events(canceled_at)')로 취소 여부를 먼저 확인하고(멤버가 아니면 null이므로 공지를 찾을 수 없어요) update 또는 delete 뒤 .eq('id').select('id')로 영향 행 수를 확인해 0행이면 공지를 바꿀 권한이 없어요를 반환한다. revalidatePath는 쓰지 않는다. DB 마이그레이션은 만들지 않는다.",
+      "notes": "쿠키를 쓰므로 getAnnouncements는 Suspense 안에서만 호출한다. 작성자 이름은 조회하지 않는다(작성자는 항상 주최자). database.types.ts는 직접 수정하지 않는다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-09T12:18:41.124Z",
+      "updatedAt": "2026-11-09T12:19:28.684Z",
+      "relatedFiles": [
+        {
+          "path": "lib/validations/announcement.ts",
+          "type": "CREATE",
+          "description": "공지 입력 Zod 스키마"
+        },
+        {
+          "path": "lib/data/announcements.ts",
+          "type": "CREATE",
+          "description": "공지 조회 데이터 계층"
+        },
+        {
+          "path": "app/(app)/events/announcement-actions.ts",
+          "type": "CREATE",
+          "description": "공지 작성·고정·삭제 서버 액션"
+        },
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "REFERENCE",
+          "description": "서버 액션 패턴"
+        },
+        {
+          "path": "lib/data/participations.ts",
+          "type": "REFERENCE",
+          "description": "데이터 계층 패턴"
+        }
+      ],
+      "implementationGuide": "participation-actions.ts의 setAttendance(검증, 세션, DB 호출, 오류 매핑, ActionResult)와 actions.ts의 updateEvent(0행 확인)를 그대로 따른다. lib/data/participations.ts의 getParticipants 구조(isUuid 가드, createClient, throw)를 따른다. Zod 4의 { error: ... } 옵션과 isUuid refine은 lib/validations/participation.ts 스타일을 따른다. 타입은 lib/types/participation.ts의 Announcement와 lib/supabase/database.types.ts의 announcements를 사용한다.",
+      "verificationCriteria": "npm run typecheck와 lint 통과. 세 액션이 입력 재검증, 세션 확인, 취소 차단, 0행 권한 거부를 모두 수행하고 author_id를 세션에서만 가져오는지 코드로 확인. 본문 빈 값과 1001자는 스키마에서 거부.",
+      "analysisResult": "Task 009 공지(F003): 이벤트 상세 공지 탭을 실데이터로 연결한다. DB(announcements 테이블, 컬럼 단위 권한, RLS 정책 4개)는 Task 006에서 이미 준비돼 있어 마이그레이션과 RPC 없이 앱 코드와 문서만 바꾼다. 결정: 본문 1000자 서버 검증만(DB CHECK 없음), 취소된 이벤트는 화면 숨김과 서버 액션 차단으로 읽기 전용, 공지 수정 기능 없음(작성·삭제·상단 고정만). 계획 파일: C:\\Users\\Tony\\.claude\\plans\\plan-task-dapper-lemon.md",
+      "summary": "lib/validations/announcement.ts, lib/data/announcements.ts, app/(app)/events/announcement-actions.ts를 만들었다. 세 액션이 입력 Zod 재검증, 세션 확인, 취소 차단, 영향 행 0 확인을 수행하고 author_id는 세션 user.id만 쓴다. npm run typecheck와 해당 파일 eslint 통과. 한계: 빈 값과 1001자 거부는 스키마 코드로만 확인했고 실제 동작은 Task009-3의 폼 시험에서 확인한다. DB 마이그레이션은 만들지 않았다.",
+      "completedAt": "2026-11-09T12:19:28.681Z"
+    },
+    {
+      "id": "db18760e-57c2-4aaa-a92e-f37f41b91bd5",
+      "name": "Task009-2 공지 보드 UI 실데이터 전환과 상세 탭 연결",
+      "description": "components/event/announcement-board.tsx를 재작성한다. 더미 useState와 로컬 정렬을 제거하고 props {eventId, items, isHost, canceled}의 서버 items를 기준으로 한다. isHost && !canceled일 때만 RHF + zodResolver(announcementFormSchema) 입력창(Textarea, n/1000 글자 수, 공지 등록 버튼 h-11, 처리 중 비활성)을 보이고 성공 시 입력 비우기, 토스트, router.refresh(), 실패 시 서버 메시지 토스트. 주최자이고 취소된 이벤트면 취소된 이벤트라 공지를 더 이상 쓰거나 바꿀 수 없어요 안내. 각 공지는 고정 뱃지, whitespace-pre-wrap 본문, formatEventDate(created_at) 작성 시각을 보이고 주최자 버튼(고정/고정 해제, 삭제)은 !canceled일 때만 보이며 항목별 useTransition으로 처리 중 비활성. 삭제는 cancel-event-button.tsx의 ConfirmActionButton을 export하고 prop eventId를 targetId로 일반화해 재사용(같은 파일 사용처 2곳만 수정, 동작 변화 없음). 빈 목록은 EmptyState 등록된 공지가 없습니다. app/(app)/events/[id]/page.tsx에는 ParticipantsPanel과 같은 모양의 AnnouncementsPanel({event, isHost})을 추가해 getAnnouncements를 호출하고 공지 탭을 Suspense로 감싸 교체한다. pending 변수는 카풀·정산 탭이 쓰므로 남기고 주석만 갱신한다.",
+      "notes": "components/ui는 수정하지 않는다. connection()은 현재 시각을 쓰지 않으므로 불필요. ConfirmActionButton prop 이름 변경이 DeleteEventButton과 CancelEventButton 사용처를 깨지 않는지 typecheck로 확인.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "63f71d79-10bd-4e0c-981c-9e9398484387"
+        }
+      ],
+      "createdAt": "2026-11-09T12:18:41.124Z",
+      "updatedAt": "2026-11-09T12:21:10.022Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/announcement-board.tsx",
+          "type": "TO_MODIFY",
+          "description": "더미 보드를 실데이터 보드로 재작성"
+        },
+        {
+          "path": "components/event/cancel-event-button.tsx",
+          "type": "TO_MODIFY",
+          "description": "ConfirmActionButton export와 prop 일반화"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "공지 탭을 AnnouncementsPanel로 연결"
+        },
+        {
+          "path": "components/event/event-form.tsx",
+          "type": "REFERENCE",
+          "description": "RHF 폼 패턴"
+        }
+      ],
+      "implementationGuide": "event-form.tsx의 RHF 패턴(register, handleSubmit, FieldError role=alert, aria-invalid)과 cancel-event-button.tsx의 useTransition + toast + router.refresh 패턴을 따른다. 레이아웃(주최자 lg 2열, 참여자 500px)은 바꾸지 않는다. 모바일 375px에서 버튼 줄이 가로로 넘치지 않게 flex-wrap을 고려한다.",
+      "verificationCriteria": "npm run check-all 통과. 공지 탭이 준비 중 문구 대신 실데이터를 표시하고, 비주최자에게는 입력창과 버튼이 없으며, 취소된 이벤트에서는 쓰기 UI가 숨겨진다.",
+      "analysisResult": "Task 009 공지(F003): 이벤트 상세 공지 탭을 실데이터로 연결한다. DB(announcements 테이블, 컬럼 단위 권한, RLS 정책 4개)는 Task 006에서 이미 준비돼 있어 마이그레이션과 RPC 없이 앱 코드와 문서만 바꾼다. 결정: 본문 1000자 서버 검증만(DB CHECK 없음), 취소된 이벤트는 화면 숨김과 서버 액션 차단으로 읽기 전용, 공지 수정 기능 없음(작성·삭제·상단 고정만). 계획 파일: C:\\Users\\Tony\\.claude\\plans\\plan-task-dapper-lemon.md",
+      "summary": "announcement-board.tsx를 서버 items 기준 실데이터 보드로 재작성했다(RHF+Zod 입력, n/1000 글자 수, 고정·삭제 버튼, 작성 시각, 취소 시 읽기 전용 안내). ConfirmActionButton을 export하고 targetId로 일반화해 공지 삭제 확인 Dialog에 재사용했으며 기존 취소·삭제 버튼 동작은 그대로다. 상세 페이지 공지 탭을 AnnouncementsPanel(Suspense)로 연결했다. watch를 useWatch로 바꿔 React Compiler 경고를 없앴고 npm run check-all과 npm run build가 통과했다. 한계: 화면 동작(비주최자 UI 숨김, 취소 시 쓰기 UI 숨김, 실제 저장)은 아직 브라우저에서 확인하지 않았고 Task009-3에서 검증한다.",
+      "completedAt": "2026-11-09T12:21:10.019Z"
+    },
+    {
+      "id": "9f432cfb-2f02-40a7-a3c3-a910eebac2d1",
+      "name": "Task009-3 로그인 세션 Playwright 검증(TC-009-01~09)",
+      "description": "npm run dev에서 사용자가 직접 로그인한 두 계정(Google 주최자, 이메일 참여자 minjetony@naver.com)으로 검증한다. 두 계정 동시 사용은 Playwright 브라우저 컨텍스트 2개로 하고 로그아웃 버튼은 누르지 않고 한쪽 컨텍스트 쿠키만 지운다(전역 로그아웃으로 다른 세션이 끊길 수 있음). 01 주최자가 공지 2개 작성 후 참여자 화면에서 최신순·고정 우선 표시, 02 참여자 화면에 입력창·버튼 없음과 참여자 토큰 PostgREST INSERT 403 42501 및 PATCH/DELETE 200 빈 배열(0행), 03 응답한 적 없는 계정의 announcements 조회 빈 배열과 상세 not-found, 04 공지 0개 빈 상태와 줄바꿈 많은 긴 본문, 05 Task 008 참석 응답·대기 승급·출석 회귀, 06 작성·고정·삭제 서버 액션 POST 상태 코드와 조회 응답 pinned 값, 07 375px 고정 공지 상단 노출과 가로 넘침 없음, 08 이벤트 취소 후 쓰기 UI 숨김과 서버 액션 거부 메시지, 09 1000자 등록 성공과 1001자 폼 거부. 콘솔 에러와 네트워크 실패도 확인한다. 시험 이벤트는 마지막에 한 번의 DELETE 문으로 모아서 지운다(Supabase MCP가 DELETE마다 확인창을 띄우므로 횟수를 줄임, FK cascade로 공지·참석 기록도 삭제).",
+      "notes": "로그인은 사용자가 직접 한다. 인증 우회 코드는 만들지 않는다. 시험 데이터 삭제는 대상 id와 연결 데이터를 먼저 확인한 뒤 실행한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "db18760e-57c2-4aaa-a92e-f37f41b91bd5"
+        }
+      ],
+      "createdAt": "2026-11-09T12:18:41.124Z",
+      "updatedAt": "2026-11-09T12:35:52.150Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "REFERENCE",
+          "description": "TC-009 체크리스트"
+        }
+      ],
+      "implementationGuide": "Task 008 때처럼 page.context().browser().contexts()로 두 컨텍스트의 쿠키에서 세션 토큰을 읽어 PostgREST를 호출한다(토큰은 출력하지 않는다). 계정이 서로 다른지 user id로 먼저 확인한다. 서버 액션의 길이 재검증은 UI로 우회 입력이 어려워 코드 검토와 typecheck로 확인하고 DB CHECK 없음 한계를 기록한다.",
+      "verificationCriteria": "TC-009-01~09 결과를 통과/실패와 근거로 기록하고, 실패는 구현 버그/시나리오 오류/환경 문제로 분류한다. 시험 데이터가 모두 삭제됐음을 조회로 확인한다.",
+      "analysisResult": "Task 009 공지(F003): 이벤트 상세 공지 탭을 실데이터로 연결한다. DB(announcements 테이블, 컬럼 단위 권한, RLS 정책 4개)는 Task 006에서 이미 준비돼 있어 마이그레이션과 RPC 없이 앱 코드와 문서만 바꾼다. 결정: 본문 1000자 서버 검증만(DB CHECK 없음), 취소된 이벤트는 화면 숨김과 서버 액션 차단으로 읽기 전용, 공지 수정 기능 없음(작성·삭제·상단 고정만). 계획 파일: C:\\Users\\Tony\\.claude\\plans\\plan-task-dapper-lemon.md",
+      "summary": "2026-11-09 주최자(Google)와 참여자(이메일) 두 계정으로 TC-009-01~09를 모두 통과했다. 작성 시 줄바꿈 유지와 최신순, 고정 우선 정렬과 pinned 값, 참여자 화면 쓰기 UI 없음과 PostgREST 직접 쓰기 거부(INSERT 403 42501, PATCH·DELETE 0행), 비멤버 조회 빈 배열과 상세 not-found, 삭제 확인창, 375px 가로 스크롤 없음, 취소 후 낡은 탭에서 작성·고정·삭제 모두 서버 액션이 거부하고 DB 불변, 1000자 등록 성공과 1001자 폼 거부를 확인했다. 시험 중 구현 버그 1건을 찾아 고쳤다: 공백 없는 긴 영문 1000자가 카드 밖으로 넘쳐 페이지가 9385px로 늘어나던 문제를 overflow-wrap:anywhere로 수정했고 수정 후 가로 스크롤이 사라졌다. 이메일 계정이 admin이라 비멤버 시험이 안 돼 사용자 요청으로 그 계정의 role을 user로 바꿨고 되돌리지 않았다. 시험 데이터는 한 번의 DELETE로 모두 삭제해 0건임을 확인했다. 한계: 1001자의 서버 액션 재검증은 UI로 우회할 수 없어 코드 검토로만 확인했고 DB CHECK가 없다.",
+      "completedAt": "2026-11-09T12:35:52.148Z"
+    },
+    {
+      "id": "371612bc-4cd6-4ebf-9d6f-d0e823bd1038",
+      "name": "Task009-4 PRD·ROADMAP 반영과 최종 check-all·build",
+      "description": "docs/PRD.md 공지 부분에 author_id, 본문 1000자(서버 검증), 수정 불가, 취소된 이벤트는 읽기 전용, 읽기 권한은 주최자와 응답한 참여자(상태 무관)를 반영한다. docs/ROADMAP.md Task 009를 완료로 표시하고 진행표를 갱신하며 체크리스트에 TC-009-08(취소된 이벤트에서 작성·고정·삭제 차단)과 TC-009-09(1000자 경계)를 추가해 결과를 체크하고, 작업 기록에 결과·검증 메모·알려진 한계(길이 제한과 취소 후 차단이 서버 액션에만 있어 PostgREST 직접 호출로 우회 가능)·Task 010 입력을 남긴다. 이후 npm run check-all, npm run build를 순서대로 실행하고 결과를 그대로 보고한다.",
+      "notes": "실패한 항목은 숨기지 않고 그대로 보고한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "9f432cfb-2f02-40a7-a3c3-a910eebac2d1"
+        }
+      ],
+      "createdAt": "2026-11-09T12:18:41.124Z",
+      "updatedAt": "2026-11-09T12:38:44.156Z",
+      "relatedFiles": [
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "공지 규칙 반영"
+        },
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 009 완료와 TC 추가"
+        }
+      ],
+      "implementationGuide": "ROADMAP은 현황표 중심 구조(지금 상태, 전체 진행표, Task 본문은 요약, 긴 결과는 작업 기록)를 유지한다. 커밋은 사용자 요청 시에만 하고 db 없음, feat, docs로 나눈다.",
+      "verificationCriteria": "PRD와 ROADMAP이 구현·검증 결과와 일치하고 npm run check-all과 npm run build가 통과한다.",
+      "analysisResult": "Task 009 공지(F003): 이벤트 상세 공지 탭을 실데이터로 연결한다. DB(announcements 테이블, 컬럼 단위 권한, RLS 정책 4개)는 Task 006에서 이미 준비돼 있어 마이그레이션과 RPC 없이 앱 코드와 문서만 바꾼다. 결정: 본문 1000자 서버 검증만(DB CHECK 없음), 취소된 이벤트는 화면 숨김과 서버 액션 차단으로 읽기 전용, 공지 수정 기능 없음(작성·삭제·상단 고정만). 계획 파일: C:\\Users\\Tony\\.claude\\plans\\plan-task-dapper-lemon.md",
+      "summary": "docs/PRD.md에 announcements의 author_id와 공지 규칙(주최자 전용 작성·삭제·고정, 고정 우선 최신순, 읽기는 주최자와 응답한 참여자, 1000자 서버 검증, 수정 불가, 취소 이벤트 읽기 전용, 서버 액션에만 있는 차단)을 반영했다. docs/ROADMAP.md는 Task 009를 완료로 바꾸고 현재 상태·진행표를 갱신했으며 TC-009-01~07을 체크하고 TC-009-08·09를 추가해 체크했다. 작업 기록에 구현·검증 표·알려진 한계·시험 환경 메모·Task 010 입력을 남겼고, 입력 중 카풀 memo 컬럼이 DB에 없는데 ROADMAP 본문에는 메모가 있는 불일치를 확인해 기록했다. npm run check-all과 npm run build가 순서대로 통과했다. TC-009-05는 참석 응답만 다시 확인했고 대기 승급·출석은 재시험하지 않았음을 문서에 정직하게 적었다.",
+      "completedAt": "2026-11-09T12:38:44.153Z"
     }
   ]
 }
