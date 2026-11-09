@@ -1121,6 +1121,511 @@
       "analysisResult": "ROADMAP Task 006: 확정된 도메인 모델(lib/types, docs/PRD.md)을 Supabase DB로 옮긴다. 9개 테이블(profiles, events, event_series, participations, announcements, carpool_rides, carpool_passengers, expenses, settlement_shares) 마이그레이션, RLS, private 헬퍼, get_event_invite RPC, 생성 타입과 lib/types 정합화가 목표이다. 쓰기 로직(정원, 좌석, 정산 전환)은 Task 007~011 범위이다. 상세 계획 파일: C:\\Users\\Tony\\.claude\\plans\\vectorized-herding-pond.md. 공통 규칙: 모든 새 테이블은 생성 즉시 RLS 활성화와 anon 권한 REVOKE, 정책은 to authenticated와 (select auth.uid()) 래핑, SECURITY DEFINER 함수는 set search_path 빈 값과 스키마 명시, 적용한 SQL은 같은 내용으로 supabase/migrations 폴더에 파일로 저장한다. DB 변경, 브랜치 생성, 커밋은 사용자 승인 후에만 실행한다. 보고와 문서는 한국어로 작성한다.",
       "summary": "check-all과 build 통과, list_migrations와 supabase/migrations 5개 파일 일치, 승인된 계정(조민제)만 admin 지정(전 user, 후 admin), ROADMAP Task 006 완료 표시와 결과·Task 007 입력 기록. 로그인이 필요한 회귀(Google 로그인, /admin, /events, /e/futsal1114, 가입 트리거)는 사용자가 직접 확인해야 하여 미확인 상태로 남김.",
       "completedAt": "2026-11-07T14:31:36.016Z"
+    },
+    {
+      "id": "71a819bd-0dfb-459f-99f6-35eeb68cf14b",
+      "name": "Task007-1 세션·ID 검증·조회 계층 구현",
+      "description": "lib/auth/session.ts(getSessionUser, isAdmin: profiles.role 조회, React cache), lib/validations/ids.ts(isUuid, isShareCode 12자 base64url), lib/types/forms.ts(ActionResult, ActionFailure), lib/supabase/anon.ts(쿠키 없는 anon 클라이언트), lib/datetime.ts의 toKstLocal, lib/data/events.ts(getMyEvents: host_id 한정 조회, getEvent: UUID 검증 후 단건, getEventInvite: get_event_invite RPC 첫 행을 null 안전 어댑터로 변환)를 만든다. 구현은 이미 완료되어 npm run check-all과 build를 통과했다.",
+      "notes": "구현 완료 상태. 이 작업은 검증(Task007-3)에서 함께 확인한다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-07T14:58:31.555Z",
+      "updatedAt": "2026-11-07T14:58:59.473Z",
+      "relatedFiles": [
+        {
+          "path": "lib/auth/session.ts",
+          "type": "CREATE",
+          "description": "세션과 admin 판별"
+        },
+        {
+          "path": "lib/data/events.ts",
+          "type": "CREATE",
+          "description": "이벤트 조회 계층"
+        },
+        {
+          "path": "lib/validations/ids.ts",
+          "type": "CREATE",
+          "description": "UUID와 share_code 검증"
+        },
+        {
+          "path": "lib/supabase/anon.ts",
+          "type": "CREATE",
+          "description": "공개 RPC용 anon 클라이언트"
+        }
+      ],
+      "implementationGuide": "서버 클라이언트는 호출마다 createClient()로 새로 만들고 전역 저장 금지. getClaims()의 sub로 사용자 판별. 형식이 틀리면 DB 조회 없이 null 반환. RPC 반환의 description, rsvp_deadline은 null 처리.",
+      "verificationCriteria": "npm run check-all과 build 통과. 잘못된 share_code(형식 오류, 존재하지 않는 코드)가 notFound로 처리되고 콘솔 에러가 없다.",
+      "analysisResult": "Task 007: 이벤트 생성·조회·공유 링크(F001, F002, F011)를 mock에서 실세션·실DB로 전환한다. 상세/관리는 헤더만 실데이터, admin은 권한 검사만 실세션, 초대 /e/[code]는 get_event_invite RPC 요약만. 인증 우회 코드 금지, components/ui와 database.types.ts 직접 수정 금지, 커밋은 사용자 요청 시에만.",
+      "summary": "세션·ID 검증·조회 계층을 구현했고 npm run check-all과 build가 통과했다. 형식이 틀린 share_code와 형식은 맞지만 존재하지 않는 코드(AAAAAAAAAAAA)가 모두 not-found로 처리되고 콘솔 에러가 0건임을 Playwright로 확인했다. getEvent의 로그인 상태 동작과 isAdmin의 실제 role 조회는 Task007-3 로그인 검증에서 추가 확인이 필요하다.",
+      "completedAt": "2026-11-07T14:58:59.470Z"
+    },
+    {
+      "id": "b0685670-83db-4566-967a-1105e2911e05",
+      "name": "Task007-2 서버 액션·EventForm·이벤트 화면 실데이터 전환",
+      "description": "app/(app)/events/actions.ts에 createEvent, updateEvent(서버 Zod 재검증, host_id는 세션, 일시 toKstIso, 빈 값 null, 주간 반복 입력은 거부, update는 select로 0행이면 권한 없음). EventForm을 서버 액션에 연결하고 수정 모드와 반복 비활성 안내를 둔다. events 목록, new(복제), [id] 상세 헤더, [id]/edit(신규), [id]/manage(주최자 판정), e/[code](RPC 요약, 참석 버튼 비활성), app-header와 admin 레이아웃의 isAdmin을 Suspense 안 비동기 조회로 교체한다. 구현은 완료되어 check-all과 build를 통과했다.",
+      "notes": "구현 완료 상태. admin 통계와 목록은 mock 유지.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "71a819bd-0dfb-459f-99f6-35eeb68cf14b"
+        }
+      ],
+      "createdAt": "2026-11-07T14:58:31.555Z",
+      "updatedAt": "2026-11-08T06:11:31.582Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/actions.ts",
+          "type": "CREATE",
+          "description": "이벤트 생성·수정 서버 액션"
+        },
+        {
+          "path": "components/event/event-form.tsx",
+          "type": "TO_MODIFY",
+          "description": "서버 액션 연결과 수정 모드"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "RPC 기반 공개 초대"
+        },
+        {
+          "path": "app/(admin)/admin/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "실세션 role 검사"
+        }
+      ],
+      "implementationGuide": "페이지는 동기 래퍼 + Suspense 내부 async 컴포넌트 패턴 유지. 탭 4개와 manage 본문은 EmptyState 준비 중. 참석 쓰기와 카풀·정산은 Task 008~011 범위.",
+      "verificationCriteria": "npm run check-all과 build 통과. 생성 후 상세로 이동하고 share_code 링크가 표시된다.",
+      "analysisResult": "Task 007: 이벤트 생성·조회·공유 링크(F001, F002, F011)를 mock에서 실세션·실DB로 전환한다. 상세/관리는 헤더만 실데이터, admin은 권한 검사만 실세션, 초대 /e/[code]는 get_event_invite RPC 요약만. 인증 우회 코드 금지, components/ui와 database.types.ts 직접 수정 금지, 커밋은 사용자 요청 시에만.",
+      "summary": "서버 액션(createEvent/updateEvent), EventForm 수정 모드, 이벤트 화면과 isAdmin 실데이터 전환이 구현되었고 npm run check-all(lint, typecheck, prettier)과 npm run build가 모두 통과했다. 생성 후 상세 이동과 share_code 링크 표시는 007-3의 로그인 세션 검증에서 확인한다.",
+      "completedAt": "2026-11-08T06:11:31.579Z"
+    },
+    {
+      "id": "08aba58b-867c-4688-aac9-6ee7a6f1a627",
+      "name": "Task007-3 로그인 세션 Playwright 검증(TC-007-01~08)",
+      "description": "사용자가 Playwright 창에서 직접 Google 로그인한 세션으로 npm run dev에서 검증한다. TC-007-01 정상 생성, 02 필수값 누락 시 서버 요청 미발생, 03 잘못된 share_code, 04 비주최자 수정 거부(두 번째 계정 필요), 05 정원 1·최대 길이·이모지 제목, 06 로그인·로그아웃·세션 유지, 07 생성 요청 상태 코드와 id, share_code 응답, 08 375px 생성 폼과 링크 복사. 추가로 복제 ?from=, /admin 비admin 차단과 admin 통과, 헤더 관리자 링크, /e/code 비로그인 요약에서 host_id와 transfer_account 미노출을 네트워크 응답으로 확인한다.",
+      "notes": "사용자 로그인이 필요하다. 비로그인 항목(잘못된 코드 두 경우, 보호 경로 리다이렉트)은 이미 통과했다. 통과하지 못한 항목은 숨기지 않고 보고한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "b0685670-83db-4566-967a-1105e2911e05"
+        }
+      ],
+      "createdAt": "2026-11-07T14:58:31.555Z",
+      "updatedAt": "2026-11-08T06:18:32.420Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "REFERENCE",
+          "description": "Task 007 테스트 체크리스트"
+        }
+      ],
+      "implementationGuide": "인증 우회 코드를 만들지 않는다. 정상·예외·경계·회귀·네트워크·모바일을 모두 실행하고 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 구현 버그는 수정 후 해당 시나리오부터 재실행한다.",
+      "verificationCriteria": "TC-007-01~08과 추가 회귀 항목이 모두 통과하고 콘솔 에러와 네트워크 실패가 없다. 실행 일시를 기록한다.",
+      "analysisResult": "Task 007: 이벤트 생성·조회·공유 링크(F001, F002, F011)를 mock에서 실세션·실DB로 전환한다. 상세/관리는 헤더만 실데이터, admin은 권한 검사만 실세션, 초대 /e/[code]는 get_event_invite RPC 요약만. 인증 우회 코드 금지, components/ui와 database.types.ts 직접 수정 금지, 커밋은 사용자 요청 시에만.",
+      "summary": "2026-11-08 Playwright로 TC-007-01~08과 추가 회귀를 실행해 모두 통과했다. 정상 생성(KST 19:00→10:00Z), 필수값 누락 시 요청 미발생, 잘못된 코드 not-found, 정원 1·100자 이모지 제목 저장과 101자·정원 0 거부, 로그아웃 후 보호 경로 리다이렉트, 375px 가로 넘침 없음과 링크 복사 토스트, 복제 ?from= 값 채움, 수정 화면 KST 왕복을 확인했다. 두 번째 이메일 계정으로 비주최자의 edit·manage가 not-found로 차단되고 /admin이 차단 안내를 보이며 헤더 관리자 링크가 없음을 확인했다. 비로그인·로그인 초대 응답 모두 host_id와 transfer_account가 노출되지 않았다. 콘솔 에러는 비admin /admin의 Next dev 전용 instant 검증 안내 1건뿐이며 레이아웃 차단의 부산물이다. 잘못된 코드의 HTTP 상태는 스트리밍 때문에 200이다. 비주최자의 서버 액션 직접 호출은 RLS 검증(006-6)에 의존했다.",
+      "completedAt": "2026-11-08T06:18:32.418Z"
+    },
+    {
+      "id": "da3be51a-e69a-4952-baf1-fc5053d3b5ca",
+      "name": "Task007-4 ROADMAP 완료 반영과 Task 008 입력 기록",
+      "description": "검증이 모두 통과한 뒤 docs/ROADMAP.md Task 007에 완료 표시와 결과를 기록하고 체크리스트를 체크한다. Task 008 입력으로 초대에서 상세로 가는 경로(get_event_invite가 id를 주지 않음), 내 이벤트의 참여 이벤트, 탭 4개 연결, Profile.name과 full_name 매핑, transfer_account 노출 경로를 남긴다. 이후 npm run check-all, npm run build를 순서대로 다시 실행한다.",
+      "notes": "Task007-3이 통과하기 전에는 완료 표시를 하지 않는다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "08aba58b-867c-4688-aac9-6ee7a6f1a627"
+        }
+      ],
+      "createdAt": "2026-11-07T14:58:31.555Z",
+      "updatedAt": "2026-11-08T06:19:19.728Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 007 완료 표시와 결과"
+        }
+      ],
+      "implementationGuide": "ROADMAP의 기존 Task 006 결과 기록 형식을 따른다. 문서만 수정하면 check-all은 생략 가능하나 코드 변경이 있으면 순서대로 실행한다. 커밋은 사용자가 요청할 때만 한다.",
+      "verificationCriteria": "ROADMAP Task 007이 완료로 표시되고 결과와 Task 008 입력이 기록되며 check-all과 build가 통과한다.",
+      "analysisResult": "Task 007: 이벤트 생성·조회·공유 링크(F001, F002, F011)를 mock에서 실세션·실DB로 전환한다. 상세/관리는 헤더만 실데이터, admin은 권한 검사만 실세션, 초대 /e/[code]는 get_event_invite RPC 요약만. 인증 우회 코드 금지, components/ui와 database.types.ts 직접 수정 금지, 커밋은 사용자 요청 시에만.",
+      "summary": "docs/ROADMAP.md의 Task 007에 완료 표시와 결과(구현 범위, 검증 메모)를 기록하고 TC-007-01~08 체크리스트를 체크했다. Task 008 입력으로 초대에서 상세로 가는 경로, 참여 이벤트 조회, 탭 4개 연결, Profile.name과 full_name 매핑, transfer_account 노출 경로, 참석 쓰기 RPC를 남겼다. 이후 npm run check-all과 npm run build를 순서대로 다시 실행해 모두 통과했다.",
+      "completedAt": "2026-11-08T06:19:19.725Z"
+    },
+    {
+      "id": "6bb13066-ed04-4d86-b085-b6e9b652b804",
+      "name": "Task008-1 참석·출석 RPC 마이그레이션 작성·롤백 시험·적용·타입 재생성",
+      "description": "supabase/migrations/<ts>_participation_rpcs.sql과 supabase/rollback/<ts>_participation_rpcs.rollback.sql을 작성한다. 내용: private.promote_waitlist(p_event_id uuid) (going < capacity인 동안 waitlist를 created_at 오름차순으로 승급), public.respond_to_event(p_code text, p_response participation_status) (인증 확인, share_code로 events 조회 후 for update로 직렬화, rsvp_deadline 이후면 rsvp_closed, going 요청은 정원 여유면 going 아니면 waitlist, 상태가 바뀔 때 created_at 갱신, not_going이고 이전 상태가 going이면 승급, 반환 status/waitlist_order/going_count, 오류는 unauthenticated/event_not_found/rsvp_closed/invalid_response 문자열), public.set_attendance(p_event_id uuid, p_user_id uuid, p_attended boolean) (private.is_event_host 확인, 대상이 going일 때만 갱신), events.capacity 증가 시 private.promote_waitlist를 호출하는 AFTER UPDATE OF capacity 트리거. 기존 패턴 준수: security definer set search_path = '', (select auth.uid()), 스키마 한정, revoke execute from public, anon 후 grant execute to authenticated. begin; ... rollback; 트랜잭션으로 시나리오를 먼저 검증하고, 사용자 승인을 받은 뒤 apply_migration으로 적용한다. 이후 get_advisors로 점검하고 generate_typescript_types로 lib/supabase/database.types.ts를 재생성한다(직접 수정 금지).",
+      "notes": "원격 DB 변경은 적용 직전 반드시 사용자 승인. 정원 감소 시 강등은 하지 않는다. 시작 시각 이후 차단은 하지 않는다. 동시성은 events 행 for update로 직렬화한다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T06:35:00.201Z",
+      "relatedFiles": [
+        {
+          "path": "supabase/migrations/20261107142019_rls_helpers_policies.sql",
+          "type": "REFERENCE",
+          "description": "private 헬퍼와 RLS 정책 패턴"
+        },
+        {
+          "path": "supabase/migrations/20261107142426_public_invite_function.sql",
+          "type": "REFERENCE",
+          "description": "SECURITY DEFINER RPC 작성 패턴"
+        },
+        {
+          "path": "supabase/migrations/20261107140834_events_core_tables.sql",
+          "type": "REFERENCE",
+          "description": "participations 테이블 정의"
+        },
+        {
+          "path": "lib/supabase/database.types.ts",
+          "type": "TO_MODIFY",
+          "description": "generate_typescript_types로 재생성만 허용"
+        }
+      ],
+      "implementationGuide": "1) 기존 supabase/migrations/20261107142019_rls_helpers_policies.sql과 20261107142426_public_invite_function.sql의 헤더 주석, 함수 작성, grant 패턴을 읽고 따른다. 2) 롤백 트랜잭션 시험 SQL을 작성: 호스트/참여자 A,B/제3자 프로필과 이벤트를 임시 삽입하고 set local role authenticated, set local request.jwt.claims로 사용자 전환. 시나리오: 정원 여유 참석, 정원 초과 대기 및 waitlist_order, going 취소 시 대기 1순위만 승급, 마감 후 rsvp_closed, 대기 중 not_going, 불참 후 재참석 시 대기열 맨 뒤, 비호스트 set_attendance 거부, 정원 증가 시 승급, 비로그인 호출 거부. 모든 시험은 begin ... rollback 안에서만 실행하고 테스트 데이터 삽입 전에 사용자 승인을 받는다. 3) 사용자에게 마이그레이션 SQL과 시험 결과를 보여 주고 명시적 승인 후 apply_migration. 4) list_migrations와 supabase/migrations 파일명 일치 확인.",
+      "verificationCriteria": "롤백 시험의 모든 시나리오가 기대와 일치하고 시험 후 DB가 원상태이다. 마이그레이션 파일과 list_migrations가 일치하고 롤백 SQL이 저장되어 있다. get_advisors에 새 ERROR가 없다. database.types.ts에 respond_to_event와 set_attendance가 생성된다. npm run check-all 통과.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "참석·출석 RPC 마이그레이션을 작성하고 begin/rollback 트랜잭션으로 시나리오 S1~S11을 모두 통과시킨 뒤 사용자 승인 하에 apply_migration으로 적용했다(서버 버전 20261108063349, 파일명 일치, 롤백 SQL은 supabase/rollback/participation_rpcs.rollback.sql). private.promote_waitlist, respond_to_event, set_attendance, 정원 증가 승급 트리거가 생성됐고 anon 실행 불가, authenticated는 공개 RPC 2개만 실행 가능, private 함수 직접 실행 불가를 확인했다. 시험 데이터는 롤백되어 events 2건, participations 0건, 시험용 이벤트 0건으로 원상 확인. get_advisors에 ERROR 없고 새 WARN은 의도된 0029 2건뿐이다. database.types.ts는 generate_typescript_types 결과의 Functions 블록만 Edit으로 반영했다(전체 덮어쓰기 대신 prettier 포맷 유지). npm run check-all 통과. 첫 시험 실행은 Supabase 502 일시 오류로 실패했으나 DB 변경이 없음을 확인한 뒤 동일 SQL을 재실행했다. 동시 호출 경쟁은 for update 직렬화 설계에 의존하며 실제 동시 실행 시험은 하지 않았다.",
+      "completedAt": "2026-11-08T06:35:00.199Z"
+    },
+    {
+      "id": "aae270ab-16eb-4797-ba28-c22f2063e8e1",
+      "name": "Task008-2 참석 검증 스키마·데이터 계층·서버 액션",
+      "description": "lib/validations/participation.ts(respond 스키마: isShareCode 코드와 going|not_going, attendance 스키마: isUuid 두 개와 boolean), lib/data/participations.ts(getParticipants(eventId): participations와 profiles(full_name, avatar_url) 조회 후 ParticipantRowProps[]로 변환하며 full_name을 name으로 매핑, created_at 정렬 후 대기 순번 1부터, 정렬은 going, waitlist, not_going 순 / getMyParticipationByCode(code): 내 상태, 대기 순번, eventId, 비멤버면 null), lib/data/events.ts의 getMyEvents 수정(내 participations의 event_id와 host_id=me를 합쳐 참여 이벤트 포함, admin 전체 노출 방지, goingCount와 myStatus 실제 값), app/(app)/events/participation-actions.ts(use server): respondToEvent(code, response)와 setAttendance(eventId, userId, attended). 순서는 입력 Zod 재검증, getSessionUser, supabase.rpc, 오류 코드를 한국어 메시지로 매핑하고 ActionResult(lib/types/forms.ts)를 반환한다.",
+      "notes": "react-hook-form은 쓰지 않는다. 가이드의 서버 재검증과 ActionResult 패턴만 따른다. Profile.name과 full_name 매핑은 data 계층에서만 처리하고 DB 컬럼명은 유지한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "6bb13066-ed04-4d86-b085-b6e9b652b804"
+        }
+      ],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T06:44:05.454Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/actions.ts",
+          "type": "REFERENCE",
+          "description": "서버 액션 패턴"
+        },
+        {
+          "path": "lib/data/events.ts",
+          "type": "TO_MODIFY",
+          "description": "getMyEvents 참여 이벤트 포함"
+        },
+        {
+          "path": "lib/data/participations.ts",
+          "type": "CREATE",
+          "description": "참석자 조회"
+        },
+        {
+          "path": "lib/validations/participation.ts",
+          "type": "CREATE",
+          "description": "Zod 스키마"
+        },
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "CREATE",
+          "description": "respondToEvent, setAttendance"
+        },
+        {
+          "path": "lib/mocks/participations.ts",
+          "type": "REFERENCE",
+          "description": "대기 순번 정렬 규칙"
+        },
+        {
+          "path": "lib/types/forms.ts",
+          "type": "DEPENDENCY",
+          "description": "ActionResult"
+        }
+      ],
+      "implementationGuide": "app/(app)/events/actions.ts의 패턴(isUuid, getSessionUser, safeParse, createClient, 일반화된 한국어 오류, z.flattenError)을 그대로 따른다. 서버 클라이언트는 lib/supabase/server.ts의 createClient()를 요청마다 새로 만든다. database.types.ts가 non-null로 잘못 표기하는 RPC 반환은 lib/data에서 ?? null로 보정한다. 대기 순번 계산은 lib/mocks/participations.ts의 getParticipantRows와 동일한 규칙으로 구현하되 mock 파일은 삭제하거나 수정하지 않는다(admin이 의존). 쿠키를 읽는 함수는 Suspense 안에서만 호출한다.",
+      "verificationCriteria": "npm run check-all 통과. 잘못된 code/uuid/응답값은 서버에서 거부된다. RPC 오류 코드가 한국어 메시지로 변환된다. getMyEvents가 호스트와 참여 이벤트를 모두 반환하고 admin이 전체를 보지 않는다.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "참석 Zod 스키마(lib/validations/participation.ts), 데이터 계층(getParticipants, getMyParticipationByCode), getMyEvents 개선(호스트+참여 이벤트 합치기, user_id/host_id 한정으로 admin 전체 노출 방지, goingCount·myStatus 실값), 서버 액션(respondToEvent, setAttendance; Zod 재검증 -> 세션 -> RPC -> 한국어 오류 매핑)을 구현. npm run check-all(lint, typecheck, prettier)와 npm run build 통과. 실DB 동작(RPC 호출, 실제 사용자 시나리오)은 UI 연결 전이라 브라우저/DB 레벨로는 검증하지 않음.",
+      "completedAt": "2026-11-08T06:44:05.452Z"
+    },
+    {
+      "id": "69df100e-dca3-4376-aad2-b598c5e68ff9",
+      "name": "Task008-3 초대·상세 참석자 탭·내 이벤트 UI 실데이터 전환",
+      "description": "components/event/rsvp-buttons.tsx의 더미 상태를 제거하고 respondToEvent 호출형으로 개조한다(props: code, initialStatus, waitlistOrder, goingCount, capacity, closed. 처리 중 비활성, 성공 시 뱃지와 토스트와 router.refresh(), 실패 시 서버 메시지 토스트, 정원 초과 시 대기 신청 라벨 유지). app/e/[code]/page.tsx의 disabled 버튼과 곧 제공돼요 문구를 RsvpButtons로 교체하고 getMyParticipationByCode로 재방문 시 내 상태를 표시하며 응답한 멤버에게 상세 링크를 노출한다. components/event/participant-list.tsx를 만들고 app/(app)/events/[id]/page.tsx의 참석자 탭을 실데이터로 교체한다(정원 게이지, 참석/대기(순번)/불참 구역, ParticipationBadge, 호스트 포함 전원에게 내 응답 변경 RsvpButtons). 공지·카풀·정산 탭은 준비 중 유지. app/(app)/events/page.tsx는 getMyEvents 변경으로 참여 탭과 뱃지가 채워지는지 확인한다.",
+      "notes": "호스트도 일반 참여자처럼 직접 응답한다. 응답 후 이동하지 않고 /e/[code]에서 상태만 갱신한다. components/ui는 수정하지 않는다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "aae270ab-16eb-4797-ba28-c22f2063e8e1"
+        }
+      ],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T07:20:48.851Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/rsvp-buttons.tsx",
+          "type": "TO_MODIFY",
+          "description": "서버 액션 연동"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "비활성 버튼 교체"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "참석자 탭 실데이터"
+        },
+        {
+          "path": "components/event/participant-list.tsx",
+          "type": "CREATE",
+          "description": "참석자 목록"
+        },
+        {
+          "path": "app/(app)/events/page.tsx",
+          "type": "REFERENCE",
+          "description": "참여 탭 확인"
+        },
+        {
+          "path": "components/event/capacity-gauge.tsx",
+          "type": "DEPENDENCY",
+          "description": "정원 게이지"
+        },
+        {
+          "path": "components/event/participation-badge.tsx",
+          "type": "DEPENDENCY",
+          "description": "상태 뱃지"
+        }
+      ],
+      "implementationGuide": "기존 컴포넌트를 재사용: CapacityGauge, ParticipationBadge, EmptyState, sonner toast. useTransition으로 pending 처리. 동적 조회는 Suspense 내부 유지(Cache Components 규칙). 마감 판정은 서버가 결정하므로 UI의 closed는 표시용이며 실제 차단은 RPC 오류로 처리한다. mock 의존 코드를 새로 들이지 않는다.",
+      "verificationCriteria": "npm run check-all와 npm run build 통과. 초대 화면에서 참석/불참이 DB에 반영되고 재방문 시 내 상태가 유지된다. 상세 참석자 탭에 실데이터와 대기 순번이 표시된다. 내 이벤트 참여 탭이 채워진다.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "RsvpButtons를 respondToEvent 호출형으로 개조(처리 중 비활성, 성공 토스트와 router.refresh, 서버 메시지 토스트, 대기 순번 표시). 초대 페이지의 비활성 버튼을 RsvpButtons로 교체하고 getMyParticipationByCode로 내 상태와 응답한 멤버용 상세 링크를 추가. participant-list.tsx 신규, 상세 참석자 탭을 실데이터로 교체(호스트 포함 전원 RsvpButtons). npm run check-all과 build 통과. 로그인 세션 기반 실동작과 내 이벤트 참여 탭 확인은 Task008-5에서 수행.",
+      "completedAt": "2026-11-08T07:20:48.848Z"
+    },
+    {
+      "id": "c3a38e13-4c9e-4ac2-a77c-10995f616960",
+      "name": "Task008-4 manage 출석 체크리스트 실데이터 연동",
+      "description": "components/event/attendance-checklist.tsx를 만들어 manage-board.tsx의 출석 부분만 분리한다(going 참석자 체크리스트와 n/m명 출석 요약, 체크 시 setAttendance 호출, 낙관적 갱신 후 실패 시 롤백과 토스트). app/(app)/events/[id]/manage/page.tsx의 준비 중 문구를 이 컴포넌트로 교체한다(호스트 판정은 유지). manage-board.tsx의 비용·정산은 Task 011 범위이므로 수정하지 않는다.",
+      "notes": "입금 확인 잠금 정책은 Task 011에서 다룬다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "69df100e-dca3-4376-aad2-b598c5e68ff9"
+        }
+      ],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T07:21:26.134Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/attendance-checklist.tsx",
+          "type": "CREATE",
+          "description": "출석 체크리스트"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "본문 교체"
+        },
+        {
+          "path": "components/event/manage-board.tsx",
+          "type": "REFERENCE",
+          "description": "출석 UI 참고, 수정 금지"
+        }
+      ],
+      "implementationGuide": "getParticipants(eventId)에서 status가 going인 행만 전달한다. useOptimistic 또는 useState와 useTransition으로 토글하고 setAttendance 실패 시 이전 값으로 되돌린다. 기존 Checkbox, Label 컴포넌트를 사용한다. 비호스트는 기존 안내 후 상세로 돌려보내는 동작을 유지한다.",
+      "verificationCriteria": "호스트가 체크한 출석이 DB attended에 반영되고 새로고침 후에도 유지된다. 비호스트는 차단된다. 실패 시 롤백과 토스트가 동작한다. npm run check-all 통과.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "attendance-checklist.tsx를 신규 작성해 going 참석자 체크리스트와 n/m명 출석 요약을 제공하고, 체크 시 setAttendance를 호출하며 낙관적 갱신 후 실패하면 이전 값으로 롤백하고 토스트를 띄운다. manage/page.tsx는 getParticipants로 going 행만 전달하고 호스트 판정은 유지했다. manage-board.tsx는 수정하지 않았다. check-all과 build 통과. 새로고침 후 DB 반영과 비호스트 차단의 실동작 확인은 Task008-5에서 수행.",
+      "completedAt": "2026-11-08T07:21:26.132Z"
+    },
+    {
+      "id": "79691187-d1ea-4821-b6ed-be7b695736f3",
+      "name": "Task008-5 로그인 세션 Playwright 검증(TC-008-01~08)",
+      "description": "npm run dev에서 사용자가 직접 로그인한 두 계정(Google admin, 이메일 비admin)으로 TC-008-01~08을 실행한다. 01 정원 여유 시 참석, 02 정원 초과 시 대기와 순번 안내, 03 마감 후 응답 차단, 04 정원 꽉 찬 상태에서 취소 시 대기 1순위만 승급, 05 마지막 1자리 동시 신청(재현이 어려우면 미실행으로 기록하고 for update 직렬화 검토 결과 첨부), 06 Task 007 생성과 내 이벤트 회귀, 07 응답 요청 상태 코드와 status 값, 08 375px 초대 화면 버튼 조작. 추가로 정원 증가 자동 승급, 호스트 직접 응답, 출석 체크 반영, 비호스트 manage 차단, 콘솔 에러와 네트워크 실패를 확인한다.",
+      "notes": "통과하지 못한 항목은 숨기지 않고 보고한다. 테스트 데이터 정리 여부를 사용자에게 확인한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "c3a38e13-4c9e-4ac2-a77c-10995f616960"
+        }
+      ],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T07:40:45.943Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "REFERENCE",
+          "description": "Task 008 테스트 체크리스트"
+        }
+      ],
+      "implementationGuide": "인증 우회 코드를 만들지 않는다. 테스트 이벤트는 정원 1 또는 2, 마감 시각이 지난 이벤트도 별도로 만든다(수정 폼 또는 SQL은 사용자 승인 후). 실패는 구현 버그/시나리오 오류/환경 문제로 분류하고 구현 버그는 수정 후 해당 시나리오부터 재실행한다. 로그인은 사용자가 Playwright 창에서 직접 하며 비밀번호를 받지 않는다. 실행 일시를 기록한다.",
+      "verificationCriteria": "TC-008-01~08과 추가 회귀 항목이 통과하고(05는 재현 여부를 그대로 기록) 콘솔 에러와 네트워크 실패가 없다. 실행 일시가 기록된다.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "2026-11-08 두 계정(Google admin, 이메일 비admin)으로 TC-008-01~08 실행. 통과: 01 참석, 02 대기·순번 안내, 03 마감 차단(화면 + RPC rsvp_closed), 04 취소 시 대기 승급(대기자 1명 기준), 06 생성·목록 회귀, 07 POST 200과 status 값(going/waitlist/not_going), 08 375px(가로 스크롤 없음, 버튼 143x44). 추가 통과: 정원 증가 자동 승급, 호스트 직접 응답, 출석 체크 반영, 비호스트 manage 차단(화면 + set_attendance forbidden), 콘솔 오류 0건. 정원 감소 시 기존 going 강등 없음 확인. 미실행: 05 동시 신청(재현 어려워 for update 직렬화 검토로 대체, 마이그레이션 97/198행), 대기자 2명 이상 승급 순서. 테스트 데이터 [008-03시험] 이벤트 등이 남아 있음.",
+      "completedAt": "2026-11-08T07:40:45.940Z"
+    },
+    {
+      "id": "bb744ef5-142a-4f30-8bf2-1468777032d6",
+      "name": "Task008-6 PRD·ROADMAP 반영과 최종 check-all·build",
+      "description": "docs/PRD.md에 마감, 승급, 호스트 직접 응답 규칙을 보강하고 docs/ROADMAP.md Task 008에 완료 표시와 결과와 검증 메모를 기록하고 TC-008-01~08 체크리스트를 체크하며 Task 009 입력(정원 감소 시 강등 없음, 시작 이후 차단 없음 등)을 남긴다. 이후 npm run check-all, npm run build를 순서대로 실행한다.",
+      "notes": "커밋은 사용자가 요청할 때만 한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "79691187-d1ea-4821-b6ed-be7b695736f3"
+        }
+      ],
+      "createdAt": "2026-11-08T06:27:35.487Z",
+      "updatedAt": "2026-11-08T07:45:05.997Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "완료 표시와 결과"
+        },
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "규칙 보강"
+        }
+      ],
+      "implementationGuide": "ROADMAP의 Task 007 결과 기록 형식을 따른다. 검증을 통과하지 못한 항목이 있으면 완료 표시 대신 그대로 기록한다. 개발 서버가 실행 중이면 빌드 전에 종료한다.",
+      "verificationCriteria": "ROADMAP Task 008이 완료로 표시되고 결과와 Task 009 입력이 기록되며 npm run check-all과 npm run build가 순서대로 통과한다.",
+      "analysisResult": "Task 008 (F004, F005): 참석 응답, 정원 초과 대기, 취소 시 대기 1순위 승급, 마감 후 차단, 주최자 출석 체크를 실DB로 구현한다. 확정 결정: 호스트도 일반 참여자처럼 직접 응답, 정원 증가 시 DB 트리거로 자동 승급, 응답 후 /e/[code]에 머물며 내 상태만 갱신. participations는 쓰기 정책이 없으므로 SECURITY DEFINER RPC로만 쓴다. 상세 계획은 C:/Users/Tony/.claude/plans/paln-task-task-tidy-wind.md. components/ui와 database.types.ts 직접 수정 금지, 인증 우회 코드 금지, 커밋은 사용자 요청 시에만, apply_migration은 적용 직전 사용자 승인 필수.",
+      "summary": "PRD participations 아래에 참석 규칙(호스트 직접 응답, 정원 여유 시 going/초과 시 waitlist, 마감 후 rsvp_closed, 시작 이후 차단 없음, 취소·정원 증가 시 승급, 정원 감소 시 강등 없음, 출석은 호스트만)을 추가. ROADMAP Task 008에 완료 표시, 결과·검증 메모·Task 009 입력을 기록하고 TC-008-01~08 중 05(동시 신청, 미실행 사유 명시)를 제외하고 체크. npm run check-all(ESLint, tsc, Prettier)과 npm run build 순서대로 통과. 개발 서버는 사용자 세션이라 종료하지 않고 빌드함.",
+      "completedAt": "2026-11-08T07:45:05.994Z"
+    },
+    {
+      "id": "7b84a250-c29b-4091-8c3f-0b1a88972fcb",
+      "name": "Task007-5 이벤트 취소 DB 마이그레이션·RLS 권한 정리",
+      "description": "supabase/migrations/<ts>_event_cancel.sql과 supabase/rollback/<ts>_event_cancel.rollback.sql을 작성한다. 1) events.canceled_at timestamptz null 추가(update grant 미부여). 2) public.cancel_event(p_event_id uuid): security definer, set search_path = '', (select auth.uid()). 미인증 unauthenticated, private.is_event_host 아니면 not_host, events 행 for update 후 이미 취소면 already_canceled, expenses 또는 settlement_shares에 event_id 행이 있으면 settlement_in_progress, 아니면 canceled_at = now(). revoke execute from public, anon, authenticated 후 grant execute to authenticated. 3) respond_to_event와 set_attendance를 create or replace로 수정해 취소된 이벤트면 event_canceled 오류(기존 20261108063349_participation_rpcs.sql 본문 유지, 취소 검사만 추가). 4) get_event_invite 반환에 canceled boolean 추가(drop function 후 create, revoke/grant 재설정, 기존 반환 필드 유지). 5) 직접 삭제 우회 제거: revoke delete on public.events from authenticated, drop policy events_delete_host on public.events. events_update_host와 컬럼 단위 update grant는 유지하고 canceled_at이 grant에 없는지 execute_sql SELECT로 확인. 롤백 SQL에는 복원 구문 포함. 6) begin; ... rollback; 트랜잭션 시험: 주최자 취소 성공, 비주최자 cancel_event 거부, 제3자·admin·anon의 events UPDATE/DELETE 거부, 주최자 직접 DELETE와 canceled_at 직접 UPDATE 거부, 비용 있음 거부, 정산 있음 거부, 취소 후 응답·출석 거부, 중복 취소 거부, get_event_invite의 canceled 값. 사용자 승인 후 apply_migration, get_advisors 점검, generate_typescript_types로 lib/supabase/database.types.ts 재생성(직접 수정 금지).",
+      "notes": "선행: Task007-2(완료). Task 008 체인과 무의존이지만 008-5 검증이 끝난 뒤 적용을 권장. 적용 전 사용자 승인 필수. ROADMAP TC-007-10~12의 DB 수준 검증을 담당.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "b0685670-83db-4566-967a-1105e2911e05"
+        }
+      ],
+      "createdAt": "2026-11-08T07:18:51.402Z",
+      "updatedAt": "2026-11-08T07:49:58.387Z",
+      "relatedFiles": [
+        {
+          "path": "supabase/migrations/20261108063349_participation_rpcs.sql",
+          "type": "REFERENCE",
+          "description": "RPC 작성 패턴, 수정 대상 respond_to_event·set_attendance 기존 정의"
+        },
+        {
+          "path": "supabase/migrations/20261107142019_rls_helpers_policies.sql",
+          "type": "REFERENCE",
+          "description": "events grant(96행)와 events_delete_host 정책, get_event_invite 관련 정의 위치"
+        },
+        {
+          "path": "supabase/rollback/participation_rpcs.rollback.sql",
+          "type": "REFERENCE",
+          "description": "롤백 파일 패턴"
+        },
+        {
+          "path": "lib/supabase/database.types.ts",
+          "type": "TO_MODIFY",
+          "description": "generate_typescript_types로 재생성"
+        }
+      ],
+      "implementationGuide": "supabase/migrations/20261108063349_participation_rpcs.sql과 20261107142019_rls_helpers_policies.sql의 작성 패턴을 따른다. 오류는 raise exception '코드문자열'. 파일 상단에 적용 여부·목적·되돌리기 경로 주석을 기존 형식으로 둔다. 시험 시 필요한 테스트 데이터 삽입은 사용자 승인을 받고 rollback 안에서만 한다.",
+      "verificationCriteria": "롤백 트랜잭션 시나리오가 모두 기대대로 동작(직접 DELETE·canceled_at UPDATE 거부 포함)하고, 적용 후 list_migrations와 supabase/migrations 파일이 일치하며, get_advisors 새 경고가 없거나 분류되어 있고, database.types.ts에 canceled_at과 cancel_event가 반영된다.",
+      "analysisResult": "이벤트 삭제를 '취소됨' 상태 전환(events.canceled_at)으로 구현한다. 주최자만 취소·수정할 수 있고(RLS와 RPC), expenses 또는 settlement_shares 행이 있으면 취소를 막으며, events 직접 DELETE 우회 경로를 제거한다. Task007-2(이벤트 생성 action, 완료)에 의존하고 Task 008 체인과는 독립이다.",
+      "summary": "마이그레이션 20261108074908_event_cancel_delete를 롤백 트랜잭션 23개 시나리오(비주최자·anon 거부, 비용 있음 거부, 취소 후 응답·출석 거부, 직접 UPDATE/DELETE 거부, 재취소 거부, invite canceled 값 등)로 검증한 뒤 사용자 승인 하에 적용. 사용자 요청으로 delete_event(취소된 이벤트만, 비용·정산 있으면 차단, FK cascade, 커버 경로 반환)를 추가함. list_migrations와 파일명 일치, advisors는 의도된 RPC 경고만, typecheck 통과. 참고: database.types.ts는 generate_typescript_types 출력과 동일하게 Edit으로 반영(전체 파일 덮어쓰기 아님).",
+      "completedAt": "2026-11-08T07:49:58.384Z"
+    },
+    {
+      "id": "0f54939c-bc24-45f9-8236-20c9f3f1daa0",
+      "name": "Task007-6 이벤트 취소 서버 액션·화면 반영",
+      "description": "1) lib/validations에 cancelEvent 입력 검증은 isUuid(lib/validations/ids.ts)를 재사용한다. 2) app/(app)/events/actions.ts에 cancelEvent(eventId): isUuid 검증, getSessionUser, supabase.rpc('cancel_event'), 오류 코드 한국어 매핑(not_host=주최자만 취소할 수 있어요, settlement_in_progress=비용이나 정산 내역이 있어 취소할 수 없어요, already_canceled=이미 취소된 이벤트예요, unauthenticated=로그인이 필요해요), ActionResult 반환, 성공 시 revalidatePath. updateEvent는 취소된 이벤트 수정을 거부하도록 서버에서 검사한다. 3) lib/data/events.ts와 lib/types에 canceledAt 반영(database.types.ts 파생). 4) 이벤트 상세 헤더 또는 수정 화면의 주최자 전용 '이벤트 취소' 버튼과 확인 Dialog 컴포넌트(components/event/cancel-event-button.tsx 신규, components/ui/dialog.tsx는 수정 금지): 처리 중 비활성, 성공 시 토스트와 router.refresh(), 실패 시 서버 메시지 토스트. 5) 취소 표시: components/event/event-card.tsx와 상세에 '취소됨' 뱃지, 내 이벤트 목록의 예정/지난 구분에서 취소 이벤트 구분, app/e/[code]/page.tsx는 canceled면 참석 버튼 대신 '취소된 이벤트예요' 안내. 이후 npm run check-all, npm run build를 순서대로 실행한다.",
+      "notes": "선행 Task007-5(DB 적용과 타입 재생성) 완료 필요. 인증 우회 코드 금지. check-all과 build 결과를 그대로 보고한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "7b84a250-c29b-4091-8c3f-0b1a88972fcb"
+        }
+      ],
+      "createdAt": "2026-11-08T07:18:51.402Z",
+      "updatedAt": "2026-11-08T07:52:19.968Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/actions.ts",
+          "type": "TO_MODIFY",
+          "description": "cancelEvent 추가, updateEvent 취소 검사"
+        },
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "REFERENCE",
+          "description": "서버 액션 작성 패턴"
+        },
+        {
+          "path": "lib/data/events.ts",
+          "type": "TO_MODIFY",
+          "description": "canceledAt 어댑터"
+        },
+        {
+          "path": "lib/validations/ids.ts",
+          "type": "REFERENCE",
+          "description": "isUuid 재사용"
+        },
+        {
+          "path": "components/event/cancel-event-button.tsx",
+          "type": "CREATE",
+          "description": "취소 버튼과 확인 Dialog"
+        },
+        {
+          "path": "components/event/event-card.tsx",
+          "type": "TO_MODIFY",
+          "description": "취소됨 뱃지"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "취소 버튼과 뱃지"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "취소된 이벤트 안내"
+        }
+      ],
+      "implementationGuide": "app/(app)/events/participation-actions.ts의 순서(입력 Zod 재검증, getSessionUser, supabase.rpc, 오류코드 한국어 매핑, ActionResult)를 따른다. Task008-3의 RsvpButtons와 충돌하지 않도록 canceled 표시는 추가 방식으로 넣는다. 동적 조회는 Suspense 안에서 한다(Cache Components 규칙).",
+      "verificationCriteria": "cancelEvent가 성공과 3가지 오류(not_host, settlement_in_progress, already_canceled)를 한국어 메시지로 반환하고, 취소 뱃지와 초대 안내가 표시되며, npm run check-all과 npm run build가 순서대로 통과한다.",
+      "analysisResult": "이벤트 삭제를 '취소됨' 상태 전환(events.canceled_at)으로 구현한다. 주최자만 취소·수정할 수 있고(RLS와 RPC), expenses 또는 settlement_shares 행이 있으면 취소를 막으며, events 직접 DELETE 우회 경로를 제거한다. Task007-2(이벤트 생성 action, 완료)에 의존하고 Task 008 체인과는 독립이다.",
+      "summary": "actions.ts에 cancelEvent·deleteEvent(RPC 호출, 한국어 오류 매핑 not_host/settlement_in_progress/already_canceled/not_canceled/unauthenticated, 삭제 시 커버 파일 정리, revalidatePath)를 추가하고 updateEvent는 취소된 이벤트 수정을 거부. 타입·mocks·lib/data에 canceled_at/canceled 반영. CancelEventButton·DeleteEventButton(공통 확인 Dialog, 처리 중 비활성, 토스트, 삭제 후 /events 이동)을 신규 작성하고 상세에서 취소 시 삭제 버튼만 노출. 카드·상세 취소됨 뱃지, 목록의 취소된 이벤트 구분, 초대와 상세의 취소 안내, 취소된 이벤트 수정 화면 차단. npm run check-all과 npm run build 순서대로 통과. 화면 동작 검증은 Task007-7에서 수행.",
+      "completedAt": "2026-11-08T07:52:19.966Z"
+    },
+    {
+      "id": "88449404-1f22-4258-8142-dcee01ffc455",
+      "name": "Task007-7 이벤트 취소 Playwright 검증·ROADMAP·PRD 반영",
+      "description": "사용자가 직접 로그인한 Playwright 세션(주최자 계정과 비주최자 계정)으로 npm run dev에서 TC-007-09~13을 실행한다. 09 주최자 취소 후 취소됨 뱃지와 초대 화면 응답 차단, 10 비주최자 취소·수정 시도 거부, 11 비용 또는 정산이 있는 이벤트 취소 차단 메시지, 12 주최자의 events 직접 DELETE 및 canceled_at 직접 UPDATE 거부(브라우저 콘솔의 supabase 클라이언트 또는 네트워크로 확인), 13 375px에서 취소 버튼과 다이얼로그 조작. 추가로 콘솔 에러와 네트워크 실패, 기존 Task 007 회귀(생성·수정·복제)를 확인한다. 통과한 항목을 docs/ROADMAP.md TC-007-09~13과 Task 007 추가 계획 체크박스에 체크하고 결과와 검증 메모를 기록한다. docs/PRD.md에 취소 규칙(취소됨 상태, 비용·정산이 있으면 차단, 취소 후 응답 차단)을 반영한다. 마지막으로 npm run check-all, npm run build를 순서대로 실행하고 결과를 그대로 보고한다.",
+      "notes": "선행 Task007-6 완료 필요.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "0f54939c-bc24-45f9-8236-20c9f3f1daa0"
+        }
+      ],
+      "createdAt": "2026-11-08T07:18:51.402Z",
+      "updatedAt": "2026-11-09T11:51:40.502Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "TC-007-09~13 체크와 결과 기록"
+        },
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "취소 규칙 반영"
+        }
+      ],
+      "implementationGuide": "Playwright MCP로 검증하며 인증 우회 코드는 만들지 않는다. 비용·정산이 있는 이벤트가 필요하면 사용자 승인 후 테스트 데이터를 준비한다.",
+      "verificationCriteria": "TC-007-09~13이 모두 통과로 기록되고 ROADMAP·PRD가 반영되며, 콘솔 에러와 네트워크 실패가 없거나 분류되어 있고, npm run check-all과 npm run build가 순서대로 통과한다.",
+      "analysisResult": "이벤트 삭제를 '취소됨' 상태 전환(events.canceled_at)으로 구현한다. 주최자만 취소·수정할 수 있고(RLS와 RPC), expenses 또는 settlement_shares 행이 있으면 취소를 막으며, events 직접 DELETE 우회 경로를 제거한다. Task007-2(이벤트 생성 action, 완료)에 의존하고 Task 008 체인과는 독립이다.",
+      "summary": "2026-11-09 TC-007-09~13을 주최자(Google admin)와 비주최자(이메일) 세션으로 모두 통과했다. 취소됨 뱃지와 초대 응답 차단, 비주최자 not_host 거부, 비용 있는 이벤트 취소 차단 토스트, 직접 DELETE·canceled_at UPDATE 403 거부를 확인했다. 375px에서 주최자 버튼 줄이 가로로 넘치는 구현 버그를 찾아 flex-wrap으로 고쳤다. docs/PRD.md에 취소·삭제 규칙을 반영하고 ROADMAP을 정리했으며 npm run check-all과 npm run build가 통과했다. 한계: 비용 입력 UI가 없어 TC-007-11용 비용은 PostgREST로 직접 넣었고, 시험용 이벤트 A·B가 DB에 남아 있다.",
+      "completedAt": "2026-11-09T11:51:40.500Z"
     }
   ]
 }
