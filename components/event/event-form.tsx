@@ -1,29 +1,31 @@
 "use client";
 
+import { createEvent, updateEvent } from "@/app/(app)/events/actions";
+import {
+  CoverImageField,
+  COVER_MIME_EXT,
+  type CoverValue,
+} from "@/components/event/cover-image-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 import { eventFormSchema, type EventFormInput } from "@/lib/validations/event";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const DEFAULT_WEEKDAY = 5;
-
 interface EventFormProps {
-  /** 복제 진입 시 미리 채울 값 */
+  /** 복제/수정 진입 시 미리 채울 값 */
   defaultValues?: Partial<EventFormInput>;
+  /** 수정 모드면 대상 이벤트 id. 없으면 새로 만듭니다. */
+  eventId?: string;
+  /** 수정 모드에서 현재 커버의 서명 URL (미리보기용) */
+  coverUrl?: string | null;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -35,14 +37,23 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-// 이벤트 생성 폼 (F001, F008). 제출은 DB 없이 안내 후 목록으로 이동하는 더미 동작입니다.
-export function EventForm({ defaultValues }: EventFormProps) {
+// 이벤트 생성/수정 폼 (F001). 서버 액션으로 저장합니다.
+// 주간 반복(F008)은 Task 012에서 지원하므로 지금은 비활성 안내만 둡니다.
+export function EventForm({
+  defaultValues,
+  eventId,
+  coverUrl,
+}: EventFormProps) {
   const router = useRouter();
+  const isEdit = !!eventId;
+  const [cover, setCover] = useState<CoverValue>({
+    file: null,
+    removeExisting: false,
+  });
   const {
     register,
-    control,
     handleSubmit,
-    setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<EventFormInput>({
     resolver: zodResolver(eventFormSchema),
@@ -53,17 +64,74 @@ export function EventForm({ defaultValues }: EventFormProps) {
       location: "",
       capacity: 10,
       rsvpDeadline: "",
-      recurrence: undefined,
       ...defaultValues,
     },
   });
-  const recurrence = useWatch({ control, name: "recurrence" });
 
-  function onSubmit(values: EventFormInput) {
-    toast.success("이벤트를 만들었어요.", {
-      description: `"${values.title}" (더미 데이터라 실제로 저장되지는 않아요)`,
-    });
-    router.push("/events");
+  async function onSubmit(values: EventFormInput) {
+    // 새 파일이 있으면 브라우저에서 Storage로 먼저 올리고, 서버 액션에는 경로만 넘깁니다.
+    let uploadedPath: string | null = null;
+    if (cover.file) {
+      const supabase = createClient();
+      const { data: claims } = await supabase.auth.getClaims();
+      const userId = claims?.claims.sub;
+      const ext = COVER_MIME_EXT[cover.file.type];
+      if (!userId || !ext) {
+        toast.error("이미지를 업로드하지 못했어요. 다시 로그인해 주세요.");
+        return;
+      }
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("event-covers")
+        .upload(path, cover.file, {
+          contentType: cover.file.type,
+          upsert: false,
+        });
+      if (error) {
+        toast.error(
+          "이미지를 업로드하지 못했어요. 잠시 후 다시 시도해 주세요.",
+        );
+        return;
+      }
+      uploadedPath = path;
+    }
+
+    // 새 파일 > 제거 > 기존 경로 유지 순서로 저장할 경로를 정합니다.
+    const coverImagePath =
+      uploadedPath ??
+      (cover.removeExisting ? null : (defaultValues?.coverImagePath ?? null));
+    const input = { ...values, coverImagePath };
+
+    const result = eventId
+      ? await updateEvent(eventId, input)
+      : await createEvent(input);
+
+    if (!result.success) {
+      // 저장에 실패했으니 방금 올린 파일이 고아가 되지 않게 지웁니다. (실패해도 무시)
+      if (uploadedPath) {
+        try {
+          await createClient()
+            .storage.from("event-covers")
+            .remove([uploadedPath]);
+        } catch {
+          // best-effort
+        }
+      }
+      // 서버 검증 오류는 해당 필드에 표시하고, 그 외는 토스트로 알립니다.
+      let mapped = false;
+      for (const [name, messages] of Object.entries(result.errors ?? {})) {
+        if (messages?.[0]) {
+          setError(name as keyof EventFormInput, { message: messages[0] });
+          mapped = true;
+        }
+      }
+      if (!mapped) toast.error(result.message);
+      return;
+    }
+
+    toast.success(isEdit ? "이벤트를 수정했어요." : "이벤트를 만들었어요.");
+    router.push(`/events/${result.data.id}`);
+    router.refresh();
   }
 
   return (
@@ -146,66 +214,22 @@ export function EventForm({ defaultValues }: EventFormProps) {
         <FieldError message={errors.rsvpDeadline?.message} />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border p-4">
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="recurrence"
-            checked={!!recurrence}
-            onCheckedChange={(checked) =>
-              setValue(
-                "recurrence",
-                checked === true
-                  ? { weekday: DEFAULT_WEEKDAY, endDate: "" }
-                  : undefined,
-              )
-            }
-          />
-          <Label htmlFor="recurrence">매주 반복하기</Label>
-        </div>
+      <CoverImageField
+        value={cover}
+        onChange={setCover}
+        existingUrl={coverUrl}
+        disabled={isSubmitting}
+      />
 
-        {recurrence && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="weekday">반복 요일</Label>
-              <Controller
-                control={control}
-                name="recurrence.weekday"
-                render={({ field }) => (
-                  <Select
-                    value={String(field.value ?? DEFAULT_WEEKDAY)}
-                    onValueChange={(value) => field.onChange(Number(value))}
-                  >
-                    <SelectTrigger id="weekday" className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {WEEKDAYS.map((label, index) => (
-                        <SelectItem key={label} value={String(index)}>
-                          {label}요일
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="endDate">반복 종료일</Label>
-              <Input
-                id="endDate"
-                type="date"
-                className="h-11"
-                aria-invalid={!!errors.recurrence?.endDate}
-                {...register("recurrence.endDate")}
-              />
-              <FieldError message={errors.recurrence?.endDate?.message} />
-            </div>
-          </div>
-        )}
+      <div className="flex items-center gap-3 rounded-lg border p-4">
+        <Checkbox id="recurrence" disabled />
+        <Label htmlFor="recurrence" className="text-muted-foreground">
+          매주 반복하기 (준비 중)
+        </Label>
       </div>
 
       <Button type="submit" className="h-11" disabled={isSubmitting}>
-        이벤트 만들기
+        {isEdit ? "수정 저장" : "이벤트 만들기"}
       </Button>
     </form>
   );

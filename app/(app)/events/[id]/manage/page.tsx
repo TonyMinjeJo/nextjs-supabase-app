@@ -1,27 +1,22 @@
-import { ManageBoard } from "@/components/event/manage-board";
-import { WidePage } from "@/components/page-container";
+import { AttendanceChecklist } from "@/components/event/attendance-checklist";
+import { EmptyState } from "@/components/event/empty-state";
 import { Button } from "@/components/ui/button";
-import {
-  CURRENT_USER_ID,
-  getEventById,
-  getExpenses,
-  getInitialPaymentStatus,
-  getParticipantRows,
-} from "@/lib/mocks";
+import { getSessionUser } from "@/lib/auth/session";
+import { getEvent } from "@/lib/data/events";
+import { getParticipants } from "@/lib/data/participations";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 async function EventManage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const event = getEventById(id);
+  const [event, user] = await Promise.all([getEvent(id), getSessionUser()]);
   if (!event) notFound();
 
   const detailHref = `/events/${encodeURIComponent(event.id)}`;
 
   // 주최자 전용 화면: 참여자는 안내만 보여주고 상세로 돌려보냅니다.
-  // (실제 권한 검사는 Phase 3에서 서버/RLS로 이중 확인)
-  if (event.host_id !== CURRENT_USER_ID) {
+  if (!user || event.host_id !== user.id) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center">
         <p className="text-sm text-muted-foreground">
@@ -34,13 +29,12 @@ async function EventManage({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  const goingRows = getParticipantRows(event.id).filter(
-    (row) => row.status === "going",
-  );
+  // 출석 체크는 실데이터. 비용·정산 보드는 Task 011에서 DB와 연결합니다.
+  const participants = await getParticipants(event.id);
+  const goingRows = participants.filter((p) => p.status === "going");
 
   return (
     <div className="flex flex-col gap-6">
-      <WidePage />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold">이벤트 관리</h1>
@@ -50,22 +44,13 @@ async function EventManage({ params }: { params: Promise<{ id: string }> }) {
           <Link href={detailHref}>상세로</Link>
         </Button>
       </div>
-      <ManageBoard
-        eventId={event.id}
-        goingRows={goingRows}
-        initialExpenses={getExpenses(event.id)}
-        initialPayments={Object.fromEntries(
-          goingRows.map((row) => [
-            row.userId,
-            getInitialPaymentStatus(event.id, row.userId),
-          ]),
-        )}
-      />
+      <AttendanceChecklist eventId={event.id} goingRows={goingRows} />
+      <EmptyState message="비용과 정산은 준비 중이에요." />
     </div>
   );
 }
 
-// 이벤트 관리 (F005, F007) - 출석 체크, 비용 입력, 정산 표
+// 이벤트 관리 (F005, F007) - 본문은 Task 008/011에서 연결
 export default function EventManagePage({
   params,
 }: {

@@ -14,6 +14,8 @@ export const events: MeetupEvent[] = [
     capacity: 8,
     rsvp_deadline: "2026-11-12T18:00:00+09:00",
     share_code: "futsal1114",
+    cover_image_path: null,
+    canceled_at: null,
   },
   {
     id: "e2",
@@ -26,6 +28,8 @@ export const events: MeetupEvent[] = [
     capacity: 10,
     rsvp_deadline: null,
     share_code: "hike1121",
+    cover_image_path: null,
+    canceled_at: null,
   },
   {
     id: "e3",
@@ -38,6 +42,8 @@ export const events: MeetupEvent[] = [
     capacity: 6,
     rsvp_deadline: "2026-12-01T23:59:00+09:00",
     share_code: "board1205",
+    cover_image_path: null,
+    canceled_at: null,
   },
   {
     id: "e4",
@@ -50,6 +56,8 @@ export const events: MeetupEvent[] = [
     capacity: 6,
     rsvp_deadline: null,
     share_code: "futsal1018",
+    cover_image_path: null,
+    canceled_at: null,
   },
   {
     id: "e5",
@@ -62,6 +70,8 @@ export const events: MeetupEvent[] = [
     capacity: 8,
     rsvp_deadline: null,
     share_code: "run1004",
+    cover_image_path: null,
+    canceled_at: null,
   },
 ];
 
@@ -92,6 +102,8 @@ export function getMyEvents(userId: string): EventCardProps[] {
         location: event.location,
         capacity: event.capacity,
         share_code: event.share_code,
+        cover_image_path: event.cover_image_path,
+        canceled_at: event.canceled_at,
       },
       goingCount: getGoingCount(event.id),
       isHost: event.host_id === userId,

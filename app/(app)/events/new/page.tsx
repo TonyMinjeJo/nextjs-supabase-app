@@ -1,5 +1,5 @@
 import { EventForm } from "@/components/event/event-form";
-import { getEventById } from "@/lib/mocks";
+import { getEvent } from "@/lib/data/events";
 import { Suspense } from "react";
 
 // 복제 진입(/events/new?from={id})이면 제목/설명/장소/정원을 미리 채웁니다.
@@ -10,7 +10,7 @@ async function NewEventContent({
   searchParams: Promise<{ from?: string | string[] }>;
 }) {
   const { from } = await searchParams;
-  const source = typeof from === "string" ? getEventById(from) : undefined;
+  const source = typeof from === "string" ? await getEvent(from) : null;
 
   return (
     <>

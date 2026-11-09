@@ -7,6 +7,13 @@ import { z } from "zod";
 const DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+// events.cover_image_path CHECK와 동일: {소문자 uuid}/{소문자 uuid}.{jpg|jpeg|png|webp}
+const UUID_LOWER =
+  "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+export const COVER_IMAGE_PATH_PATTERN = new RegExp(
+  `^${UUID_LOWER}/${UUID_LOWER}\\.(jpg|jpeg|png|webp)$`,
+);
+
 /** 실제로 존재하는 날짜인지 (예: 2026-02-30 거부) */
 function isRealDate(value: string): boolean {
   const date = new Date(`${value.slice(0, 10)}T00:00:00Z`);
@@ -62,6 +69,15 @@ export const eventFormSchema = z
       .union([z.literal(""), dateTimeString("마감 일시를 입력해 주세요.")])
       .optional(),
     recurrence: recurrenceSchema.optional(),
+    // 커버 이미지 Storage 경로. 비우면(""/null) 커버 없음. DB CHECK와 같은 형식만 허용합니다.
+    coverImagePath: z
+      .union([
+        z.literal(""),
+        z
+          .string()
+          .regex(COVER_IMAGE_PATH_PATTERN, "올바른 이미지 경로가 아닙니다."),
+      ])
+      .nullish(),
   })
   .superRefine((value, ctx) => {
     // 형식 검증이 통과한 경우에만 값 비교를 합니다.

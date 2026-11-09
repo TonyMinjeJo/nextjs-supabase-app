@@ -1,5 +1,4 @@
 import { CapacityGauge } from "@/components/event/capacity-gauge";
-import { RsvpButtons } from "@/components/event/rsvp-buttons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,20 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getSessionUser } from "@/lib/auth/session";
+import { RsvpButtons } from "@/components/event/rsvp-buttons";
+import { getEventInvite } from "@/lib/data/events";
+import { getMyParticipationByCode } from "@/lib/data/participations";
 import { formatEventDate } from "@/lib/format";
-import {
-  CURRENT_USER_ID,
-  getEventByCode,
-  getGoingCount,
-  getMyStatus,
-  getUserName,
-} from "@/lib/mocks";
 import { getNowMs } from "@/lib/now";
-import { createClient } from "@/lib/supabase/server";
-import { hasEnvVars } from "@/lib/utils";
+import Link from "next/link";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { Suspense } from "react";
 
 async function InviteContent({
@@ -34,17 +28,18 @@ async function InviteContent({
   await connection();
   const { code } = await params;
 
-  const event = getEventByCode(decodeURIComponent(code));
+  // 공개 요약은 get_event_invite RPC로만 조회합니다. (host_id, 계좌, 참석자 목록 미노출)
+  const [event, user, mine] = await Promise.all([
+    getEventInvite(code),
+    getSessionUser(),
+    // 재방문 시 내 응답 상태. 비로그인/비멤버(응답 전)는 null
+    getMyParticipationByCode(code),
+  ]);
   if (!event) notFound();
 
-  let isLoggedIn = false;
-  if (hasEnvVars) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getClaims();
-    isLoggedIn = !!data?.claims;
-  }
-
-  const goingCount = getGoingCount(event.id);
+  const isLoggedIn = !!user;
+  // 이메일 로그인·회원가입 후 이 초대 화면으로 돌아오기 위한 next 쿼리 값
+  const authNext = encodeURIComponent(`/e/${encodeURIComponent(code)}`);
   const closed =
     event.rsvp_deadline !== null &&
     Date.parse(event.rsvp_deadline) < getNowMs();
@@ -54,7 +49,8 @@ async function InviteContent({
       <CardHeader>
         <CardTitle className="text-xl">{event.title}</CardTitle>
         <CardDescription>
-          주최 {getUserName(event.host_id)} · 초대 링크로 도착했어요
+          {event.host_name ? `주최 ${event.host_name} · ` : ""}
+          초대 링크로 도착했어요
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -73,22 +69,37 @@ async function InviteContent({
         {event.description && (
           <p className="text-sm text-muted-foreground">{event.description}</p>
         )}
-        <CapacityGauge current={goingCount} capacity={event.capacity} />
+        <CapacityGauge current={event.going_count} capacity={event.capacity} />
 
         {isLoggedIn ? (
-          <>
-            <RsvpButtons
-              initialStatus={getMyStatus(event.id, CURRENT_USER_ID)}
-              goingCount={goingCount}
-              capacity={event.capacity}
-              closed={closed}
-            />
-            <Button asChild variant="ghost" className="h-11">
-              <Link href={`/events/${encodeURIComponent(event.id)}`}>
-                이벤트 상세 보기
-              </Link>
-            </Button>
-          </>
+          <div className="flex flex-col gap-3">
+            {event.canceled ? (
+              <p className="rounded-lg bg-secondary p-3 text-center text-sm text-secondary-foreground">
+                취소된 이벤트예요. 더 이상 응답할 수 없어요.
+              </p>
+            ) : (
+              <RsvpButtons
+                code={code}
+                initialStatus={mine?.status ?? null}
+                waitlistOrder={mine?.waitlistOrder ?? null}
+                goingCount={event.going_count}
+                capacity={event.capacity}
+                closed={closed}
+              />
+            )}
+            {/* 응답한 멤버(주최자 포함)에게만 상세 링크를 보여줍니다. */}
+            {mine && mine.status !== null && (
+              <Button asChild variant="outline" className="h-11">
+                <Link href={`/events/${encodeURIComponent(mine.eventId)}`}>
+                  이벤트 상세 보기
+                </Link>
+              </Button>
+            )}
+          </div>
+        ) : event.canceled ? (
+          <p className="rounded-lg bg-secondary p-3 text-center text-sm text-secondary-foreground">
+            취소된 이벤트예요. 더 이상 응답할 수 없어요.
+          </p>
         ) : (
           <div className="flex flex-col gap-2">
             <p className="text-center text-sm text-muted-foreground">
@@ -98,6 +109,25 @@ async function InviteContent({
               next={`/e/${encodeURIComponent(code)}`}
               label="Google로 로그인하고 참여하기"
             />
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              또는
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <Button asChild variant="outline" className="h-11 w-full">
+              <Link href={`/auth/login?next=${authNext}`}>
+                이메일로 로그인하고 참여하기
+              </Link>
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              계정이 없으신가요?{" "}
+              <Link
+                href={`/auth/sign-up?next=${authNext}`}
+                className="underline underline-offset-4"
+              >
+                이메일로 회원가입
+              </Link>
+            </p>
           </div>
         )}
       </CardContent>
@@ -105,7 +135,7 @@ async function InviteContent({
   );
 }
 
-// 이벤트 초대 (F002, F004) - 공개 요약 + 로그인 유도
+// 이벤트 초대 (F002) - 공개 요약 + 로그인 유도 + 참석 응답(로그인 시)
 export default function InvitePage({
   params,
 }: {

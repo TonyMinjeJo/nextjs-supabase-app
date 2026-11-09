@@ -10,7 +10,14 @@ import type { PaymentStatus } from "./settlement";
 export interface EventCardProps {
   event: Pick<
     MeetupEvent,
-    "id" | "title" | "starts_at" | "location" | "capacity" | "share_code"
+    | "id"
+    | "title"
+    | "starts_at"
+    | "location"
+    | "capacity"
+    | "share_code"
+    | "cover_image_path"
+    | "canceled_at"
   >;
   /** 현재 참석(going) 인원 */
   goingCount: number;

@@ -13,3 +13,10 @@ export function toKstIso(localDateTime: string): string {
   }
   return `${localDateTime}:00${KST_OFFSET}`;
 }
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** timestamptz ISO → datetime-local 값. "2026-11-13T10:00:00Z" → "2026-11-13T19:00" (KST) */
+export function toKstLocal(iso: string): string {
+  return new Date(Date.parse(iso) + KST_OFFSET_MS).toISOString().slice(0, 16);
+}

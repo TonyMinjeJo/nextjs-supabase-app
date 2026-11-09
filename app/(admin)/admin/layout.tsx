@@ -2,21 +2,20 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
-import { isAdmin } from "@/lib/mocks";
+import { isAdmin } from "@/lib/auth/session";
 import Link from "next/link";
+import { Suspense } from "react";
 
 // 서비스 운영자(admin) 영역 공통 레이아웃. (app)의 500px PageContainer는 사용하지 않습니다.
 // lg 이상: 좌측 사이드바 + 콘텐츠(max-w-6xl), lg 미만: 상단 가로 탭.
 //
-// 접근 제어(더미 구조): 현재 사용자가 admin이 아니면 안내만 보여주고 /events로 돌려보냅니다.
-// 로그인 여부는 proxy가 보장합니다. 실제 서버 측 role 검사와 RLS는 Phase 3(Task 006)에서 구현합니다.
+// 접근 제어: profiles.role을 서버에서 조회해 admin이 아니면 안내만 보여주고 /events로 돌려보냅니다.
+// 로그인 여부는 proxy가 보장하고, role 변경은 RLS/컬럼 권한이 막습니다.
 // (우회용 토글/쿼리 파라미터는 의도적으로 두지 않습니다.)
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  if (!isAdmin()) {
+// 통계·목록 데이터는 아직 더미(lib/mocks)이며, 실데이터 연결은 이후 Task에서 합니다.
+// role 조회는 쿠키를 읽으므로 Suspense 안(요청 시점)에서 실행합니다. (Cache Components)
+async function AdminGate({ children }: { children: React.ReactNode }) {
+  if (!(await isAdmin())) {
     return (
       <main className="mx-auto flex min-h-svh w-full max-w-[500px] items-center px-4">
         <div className="flex w-full flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center">
@@ -51,5 +50,21 @@ export default function AdminLayout({
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <p className="p-4 text-sm text-muted-foreground">불러오는 중...</p>
+      }
+    >
+      <AdminGate>{children}</AdminGate>
+    </Suspense>
   );
 }

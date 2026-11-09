@@ -1,48 +1,78 @@
 "use client";
 
+import { respondToEvent } from "@/app/(app)/events/participation-actions";
 import { ParticipationBadge } from "@/components/event/participation-badge";
 import { Button } from "@/components/ui/button";
 import type { ParticipationStatus } from "@/lib/types";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 interface RsvpButtonsProps {
+  /** 이벤트 공유 코드 (respond_to_event RPC의 식별자) */
+  code: string;
   initialStatus: ParticipationStatus | null;
+  /** initialStatus가 waitlist일 때만 1부터 */
+  waitlistOrder?: number | null;
   goingCount: number;
   capacity: number;
-  /** 신청 마감이 지났는지 (UI 안내용, 실제 차단은 Phase 3 서버에서) */
+  /** 신청 마감이 지났는지 (표시용, 실제 차단은 서버 RPC가 판단) */
   closed: boolean;
 }
 
-// 참석/불참 응답. 정원이 가득 차 있으면 대기로 등록됩니다. (더미 상태, 저장되지 않음)
+// 참석/불참 응답. 서버 액션(respondToEvent)으로 저장하고, 정원이 가득 차 있으면 대기로 등록됩니다.
 export function RsvpButtons({
+  code,
   initialStatus,
+  waitlistOrder = null,
   goingCount,
   capacity,
   closed,
 }: RsvpButtonsProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState(initialStatus);
-  const isFull = goingCount >= capacity;
+  const [order, setOrder] = useState(waitlistOrder);
+  const [going, setGoing] = useState(goingCount);
+  const isFull = going >= capacity;
 
   function respond(next: "going" | "not_going") {
-    if (next === "going" && status !== "going" && isFull) {
-      setStatus("waitlist");
-      toast("정원이 가득 차서 대기로 등록했어요.", {
-        description: "자리가 나면 순서대로 참석으로 바뀌어요.",
-      });
-      return;
-    }
-    setStatus(next);
-    toast.success(
-      next === "going" ? "참석으로 응답했어요." : "불참으로 응답했어요.",
-    );
+    startTransition(async () => {
+      const result = await respondToEvent(code, next);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      setStatus(result.data.status);
+      setOrder(result.data.waitlistOrder);
+      setGoing(result.data.goingCount);
+
+      if (result.data.status === "waitlist") {
+        toast("정원이 가득 차서 대기로 등록했어요.", {
+          description: result.data.waitlistOrder
+            ? `현재 대기 ${result.data.waitlistOrder}번이에요. 자리가 나면 순서대로 참석으로 바뀌어요.`
+            : "자리가 나면 순서대로 참석으로 바뀌어요.",
+        });
+      } else {
+        toast.success(
+          result.data.status === "going"
+            ? "참석으로 응답했어요."
+            : "불참으로 응답했어요.",
+        );
+      }
+      // 서버 컴포넌트(참석자 목록, 정원 게이지, 상세 링크)를 최신 상태로 갱신
+      router.refresh();
+    });
   }
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2 text-sm">
         <span className="text-muted-foreground">내 응답</span>
-        <ParticipationBadge status={status} />
+        <ParticipationBadge
+          status={status}
+          waitlistOrder={order ?? undefined}
+        />
       </div>
       {closed ? (
         <p className="rounded-lg bg-secondary p-3 text-center text-sm text-secondary-foreground">
@@ -59,13 +89,17 @@ export function RsvpButtons({
             <Button
               className="h-11"
               variant={status === "going" ? "default" : "outline"}
+              disabled={isPending}
               onClick={() => respond("going")}
             >
-              {isFull && status !== "going" ? "대기 신청" : "참석"}
+              {isFull && status !== "going" && status !== "waitlist"
+                ? "대기 신청"
+                : "참석"}
             </Button>
             <Button
               className="h-11"
               variant={status === "not_going" ? "default" : "outline"}
+              disabled={isPending}
               onClick={() => respond("not_going")}
             >
               불참

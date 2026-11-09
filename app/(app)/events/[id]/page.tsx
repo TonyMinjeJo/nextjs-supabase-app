@@ -1,52 +1,84 @@
-import { AnnouncementBoard } from "@/components/event/announcement-board";
-import { CapacityGauge } from "@/components/event/capacity-gauge";
-import { CarpoolBoard } from "@/components/event/carpool-board";
+import {
+  CancelEventButton,
+  DeleteEventButton,
+} from "@/components/event/cancel-event-button";
+import { CoverImage } from "@/components/event/cover-image";
 import { EmptyState } from "@/components/event/empty-state";
-import { ParticipationBadge } from "@/components/event/participation-badge";
-import { SettlementPanel } from "@/components/event/settlement-panel";
+import { ParticipantList } from "@/components/event/participant-list";
+import { RsvpButtons } from "@/components/event/rsvp-buttons";
 import { ShareLinkButton } from "@/components/event/share-link-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WidePage } from "@/components/page-container";
+import { getSessionUser } from "@/lib/auth/session";
+import { getCoverUrl } from "@/lib/data/event-cover";
+import { getEvent } from "@/lib/data/events";
+import { getParticipants } from "@/lib/data/participations";
 import { formatEventDate } from "@/lib/format";
+import { getNowMs } from "@/lib/now";
+import type { MeetupEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import {
-  CURRENT_USER_ID,
-  getAnnouncements,
-  getEventById,
-  getExpenses,
-  getGoingCount,
-  getParticipantRows,
-  getSettlementRows,
-  getTransferAccount,
-  getUserName,
-  passengers,
-  rides,
-} from "@/lib/mocks";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
+
+// 참석자 탭: 실데이터 목록 + 내 응답(호스트 포함 전원이 변경 가능)
+async function ParticipantsPanel({
+  event,
+  userId,
+}: {
+  event: MeetupEvent;
+  userId: string | undefined;
+}) {
+  // 신청 마감 표시에 현재 시각을 쓰므로 요청 시점에 렌더링합니다.
+  await connection();
+  const participants = await getParticipants(event.id);
+  const mine = participants.find((p) => p.userId === userId);
+  const closed =
+    event.rsvp_deadline !== null &&
+    Date.parse(event.rsvp_deadline) < getNowMs();
+  const goingCount = participants.filter((p) => p.status === "going").length;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {event.canceled_at ? (
+        <p className="rounded-lg bg-secondary p-3 text-center text-sm text-secondary-foreground">
+          취소된 이벤트예요. 더 이상 응답할 수 없어요.
+        </p>
+      ) : (
+        userId && (
+          <RsvpButtons
+            code={event.share_code}
+            initialStatus={mine?.status ?? null}
+            waitlistOrder={mine?.waitlistOrder ?? null}
+            goingCount={goingCount}
+            capacity={event.capacity}
+            closed={closed}
+          />
+        )
+      )}
+      <ParticipantList
+        participants={participants}
+        capacity={event.capacity}
+        currentUserId={userId}
+      />
+    </div>
+  );
+}
 
 async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const event = getEventById(id);
+  const [event, user] = await Promise.all([getEvent(id), getSessionUser()]);
   if (!event) notFound();
 
-  const isHost = event.host_id === CURRENT_USER_ID;
-  const participants = getParticipantRows(event.id);
-  const goingRows = participants.filter((row) => row.status === "going");
-  const names = Object.fromEntries(
-    participants.map((row) => [row.userId, row.name]),
-  );
-  // 운전자 이름도 필요하므로 참석자 외 사용자(주최자 등)를 보충합니다.
-  for (const ride of rides.filter((r) => r.event_id === event.id)) {
-    names[ride.driver_id] ??= getUserName(ride.driver_id);
-  }
-  const eventRideIds = new Set(
-    rides.filter((r) => r.event_id === event.id).map((r) => r.id),
-  );
-  const myRow = participants.find((row) => row.userId === CURRENT_USER_ID);
+  const coverUrl = await getCoverUrl(event.cover_image_path);
+  const isHost = !!user && event.host_id === user.id;
+  const encodedId = encodeURIComponent(event.id);
+
+  // 참석자 탭은 실데이터. 공지·카풀·정산 탭은 Task 009~011에서 DB와 연결합니다.
+  const pending = <EmptyState message="준비 중이에요. 곧 이용할 수 있어요." />;
 
   return (
     <>
@@ -62,34 +94,62 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
         <div
           className={cn("flex flex-col gap-3", isHost && "lg:sticky lg:top-4")}
         >
+          {coverUrl && (
+            <CoverImage
+              src={coverUrl}
+              alt={`${event.title} 커버 이미지`}
+              className="rounded-lg"
+            />
+          )}
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold">{event.title}</h1>
             <div className="flex shrink-0 items-center gap-1">
               {isHost && <Badge variant="secondary">주최</Badge>}
-              <ParticipationBadge status={myRow?.status ?? null} />
+              {event.canceled_at && <Badge variant="destructive">취소됨</Badge>}
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
             {formatEventDate(event.starts_at)} · {event.location}
           </p>
           {event.description && <p className="text-sm">{event.description}</p>}
-          <CapacityGauge
-            current={getGoingCount(event.id)}
-            capacity={event.capacity}
-          />
+          <p className="text-sm text-muted-foreground">
+            정원 {event.capacity}명
+          </p>
           {isHost && (
-            <div className="flex gap-2 lg:flex-col">
+            <div className="flex flex-wrap gap-2 lg:flex-col">
               <ShareLinkButton shareCode={event.share_code} />
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-11 flex-1 lg:flex-none"
-              >
-                <Link href={`/events/${encodeURIComponent(event.id)}/manage`}>
-                  이벤트 관리
-                </Link>
-              </Button>
+              {event.canceled_at ? (
+                // 취소된 이벤트는 수정·관리 대신 삭제만 가능합니다.
+                <DeleteEventButton
+                  eventId={event.id}
+                  className="flex-1 lg:flex-none"
+                />
+              ) : (
+                <>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-11 flex-1 lg:flex-none"
+                  >
+                    <Link href={`/events/${encodedId}/edit`}>이벤트 수정</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-11 flex-1 lg:flex-none"
+                  >
+                    <Link href={`/events/${encodedId}/manage`}>
+                      이벤트 관리
+                    </Link>
+                  </Button>
+                  <CancelEventButton
+                    eventId={event.id}
+                    className="flex-1 lg:flex-none"
+                  />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -101,66 +161,25 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
             <TabsTrigger value="carpool">카풀</TabsTrigger>
             <TabsTrigger value="settlement">정산</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="announcements">
-            <AnnouncementBoard
-              eventId={event.id}
-              initialItems={getAnnouncements(event.id)}
-              isHost={isHost}
-            />
-          </TabsContent>
-
+          <TabsContent value="announcements">{pending}</TabsContent>
           <TabsContent value="participants">
-            {participants.length === 0 ? (
-              <EmptyState message="참석자가 없습니다." />
-            ) : (
-              <ul className="flex flex-col divide-y rounded-lg border">
-                {participants.map((row) => (
-                  <li
-                    key={row.userId}
-                    className="flex items-center justify-between gap-2 p-3"
-                  >
-                    <span className="text-sm">{row.name}</span>
-                    <ParticipationBadge
-                      status={row.status}
-                      waitlistOrder={row.waitlistOrder}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Suspense
+              fallback={
+                <p className="text-sm text-muted-foreground">불러오는 중...</p>
+              }
+            >
+              <ParticipantsPanel event={event} userId={user?.id} />
+            </Suspense>
           </TabsContent>
-
-          <TabsContent value="carpool">
-            <CarpoolBoard
-              eventId={event.id}
-              initialRides={rides.filter((r) => r.event_id === event.id)}
-              initialPassengers={passengers.filter((p) =>
-                eventRideIds.has(p.ride_id),
-              )}
-              names={names}
-              goingUserIds={goingRows.map((row) => row.userId)}
-              myUserId={CURRENT_USER_ID}
-            />
-          </TabsContent>
-
-          <TabsContent value="settlement">
-            <SettlementPanel
-              rows={getSettlementRows(event.id)}
-              account={getTransferAccount(event.id)}
-              isHost={isHost}
-              myUserId={CURRENT_USER_ID}
-              manageHref={`/events/${encodeURIComponent(event.id)}/manage`}
-              hasExpenses={getExpenses(event.id).length > 0}
-            />
-          </TabsContent>
+          <TabsContent value="carpool">{pending}</TabsContent>
+          <TabsContent value="settlement">{pending}</TabsContent>
         </Tabs>
       </div>
     </>
   );
 }
 
-// 이벤트 상세 (F001~F004, F006, F007) - 주최자/참여자 뷰 분기
+// 이벤트 상세 (F001) - 헤더는 실데이터, 탭 4개는 Task 008~011에서 연결
 export default function EventDetailPage({
   params,
 }: {

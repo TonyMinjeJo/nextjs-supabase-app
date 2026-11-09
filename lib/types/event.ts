@@ -23,4 +23,6 @@ export type MeetupEvent = Pick<
   | "capacity"
   | "rsvp_deadline"
   | "share_code"
+  | "cover_image_path"
+  | "canceled_at"
 >;
