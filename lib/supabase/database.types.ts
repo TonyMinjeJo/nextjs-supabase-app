@@ -177,7 +177,9 @@ export type Database = {
       };
       events: {
         Row: {
+          canceled_at: string | null;
           capacity: number;
+          cover_image_path: string | null;
           created_at: string;
           description: string | null;
           host_id: string;
@@ -192,7 +194,9 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          canceled_at?: string | null;
           capacity: number;
+          cover_image_path?: string | null;
           created_at?: string;
           description?: string | null;
           host_id: string;
@@ -207,7 +211,9 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          canceled_at?: string | null;
           capacity?: number;
+          cover_image_path?: string | null;
           created_at?: string;
           description?: string | null;
           host_id?: string;
@@ -399,9 +405,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      cancel_event: { Args: { p_event_id: string }; Returns: undefined };
+      delete_event: { Args: { p_event_id: string }; Returns: string };
       get_event_invite: {
         Args: { p_code: string };
         Returns: {
+          canceled: boolean;
           capacity: number;
           description: string;
           going_count: number;
@@ -411,6 +420,21 @@ export type Database = {
           starts_at: string;
           title: string;
         }[];
+      };
+      respond_to_event: {
+        Args: {
+          p_code: string;
+          p_response: Database["public"]["Enums"]["participation_status"];
+        };
+        Returns: {
+          going_count: number;
+          status: Database["public"]["Enums"]["participation_status"];
+          waitlist_order: number;
+        }[];
+      };
+      set_attendance: {
+        Args: { p_attended: boolean; p_event_id: string; p_user_id: string };
+        Returns: undefined;
       };
     };
     Enums: {
