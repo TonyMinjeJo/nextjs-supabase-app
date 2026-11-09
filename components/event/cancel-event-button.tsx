@@ -19,22 +19,23 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 interface ConfirmActionButtonProps {
-  eventId: string;
+  /** 동작 대상의 id (이벤트, 공지 등). action에 그대로 전달됩니다. */
+  targetId: string;
   className?: string;
-  triggerLabel: string;
+  triggerLabel: React.ReactNode;
   title: string;
   description: string;
   confirmLabel: string;
   successMessage: string;
-  action: (eventId: string) => Promise<ActionResult<null>>;
+  action: (targetId: string) => Promise<ActionResult<null>>;
   /** 성공 후 이동할 경로. 없으면 현재 화면을 새로고침합니다. */
   redirectTo?: string;
 }
 
-// 주최자 전용 위험 동작(취소/삭제)의 공통 확인 Dialog.
+// 주최자 전용 위험 동작(취소/삭제)의 공통 확인 Dialog. 공지 삭제 등에서도 재사용합니다.
 // 처리 중에는 닫기·재시도를 막고, 실패하면 서버 메시지를 토스트로 보여 줍니다.
-function ConfirmActionButton({
-  eventId,
+export function ConfirmActionButton({
+  targetId,
   className,
   triggerLabel,
   title,
@@ -50,7 +51,7 @@ function ConfirmActionButton({
 
   function handleConfirm() {
     startTransition(async () => {
-      const result = await action(eventId);
+      const result = await action(targetId);
       if (!result.success) {
         toast.error(result.message);
         return;
@@ -118,7 +119,7 @@ export function CancelEventButton({
 }) {
   return (
     <ConfirmActionButton
-      eventId={eventId}
+      targetId={eventId}
       className={className}
       triggerLabel="이벤트 취소"
       title="이벤트를 취소할까요?"
@@ -140,7 +141,7 @@ export function DeleteEventButton({
 }) {
   return (
     <ConfirmActionButton
-      eventId={eventId}
+      targetId={eventId}
       className={className}
       triggerLabel="이벤트 삭제"
       title="이벤트를 완전히 삭제할까요?"

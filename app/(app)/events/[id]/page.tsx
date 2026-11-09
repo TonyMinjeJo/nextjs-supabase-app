@@ -1,3 +1,4 @@
+import { AnnouncementBoard } from "@/components/event/announcement-board";
 import {
   CancelEventButton,
   DeleteEventButton,
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WidePage } from "@/components/page-container";
 import { getSessionUser } from "@/lib/auth/session";
+import { getAnnouncements } from "@/lib/data/announcements";
 import { getCoverUrl } from "@/lib/data/event-cover";
 import { getEvent } from "@/lib/data/events";
 import { getParticipants } from "@/lib/data/participations";
@@ -23,6 +25,25 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+
+// 공지 탭: 실데이터 목록. 작성/고정/삭제는 주최자만, 취소된 이벤트는 읽기 전용
+async function AnnouncementsPanel({
+  event,
+  isHost,
+}: {
+  event: MeetupEvent;
+  isHost: boolean;
+}) {
+  const items = await getAnnouncements(event.id);
+  return (
+    <AnnouncementBoard
+      eventId={event.id}
+      items={items}
+      isHost={isHost}
+      canceled={!!event.canceled_at}
+    />
+  );
+}
 
 // 참석자 탭: 실데이터 목록 + 내 응답(호스트 포함 전원이 변경 가능)
 async function ParticipantsPanel({
@@ -77,7 +98,7 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
   const isHost = !!user && event.host_id === user.id;
   const encodedId = encodeURIComponent(event.id);
 
-  // 참석자 탭은 실데이터. 공지·카풀·정산 탭은 Task 009~011에서 DB와 연결합니다.
+  // 공지·참석자 탭은 실데이터. 카풀·정산 탭은 Task 010~011에서 DB와 연결합니다.
   const pending = <EmptyState message="준비 중이에요. 곧 이용할 수 있어요." />;
 
   return (
@@ -161,7 +182,15 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
             <TabsTrigger value="carpool">카풀</TabsTrigger>
             <TabsTrigger value="settlement">정산</TabsTrigger>
           </TabsList>
-          <TabsContent value="announcements">{pending}</TabsContent>
+          <TabsContent value="announcements">
+            <Suspense
+              fallback={
+                <p className="text-sm text-muted-foreground">불러오는 중...</p>
+              }
+            >
+              <AnnouncementsPanel event={event} isHost={isHost} />
+            </Suspense>
+          </TabsContent>
           <TabsContent value="participants">
             <Suspense
               fallback={
