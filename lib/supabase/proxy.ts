@@ -50,9 +50,12 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname, search } = request.nextUrl;
   // 비로그인 허용 경로: 홈, 로그인/인증, 이벤트 초대(/e/*, 공개 요약 + 로그인 유도),
-  // 관리자 로그인(/admin/login 정확히 일치만. /admin 접두사 전체를 열지 않습니다.)
+  // 관리자 로그인(/admin/login 정확히 일치만. /admin 접두사 전체를 열지 않습니다.),
+  // 공유 미리보기 이미지(/opengraph-image, /twitter-image 정확히 일치만. 크롤러가 비로그인으로 받아 갑니다.)
   const isPublicPath =
     pathname === "/" ||
+    pathname === "/opengraph-image" ||
+    pathname === "/twitter-image" ||
     pathname === "/login" ||
     pathname.startsWith("/login/") ||
     pathname === "/auth" ||

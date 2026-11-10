@@ -74,7 +74,11 @@ export function GoogleSignInButton({
         <GoogleIcon />
         {isLoading ? "Google로 이동 중..." : label}
       </Button>
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

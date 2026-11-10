@@ -35,8 +35,11 @@ export function RsvpButtons({
   const [order, setOrder] = useState(waitlistOrder);
   const [going, setGoing] = useState(goingCount);
   const isFull = going >= capacity;
+  // 이미 대기 중이면 "정원이 가득 찼어요" 안내 대신 대기 상태를 알리고, 불참 버튼은 대기 취소 역할을 합니다.
+  const isWaiting = status === "waitlist";
 
   function respond(next: "going" | "not_going") {
+    const wasWaiting = isWaiting;
     startTransition(async () => {
       const result = await respondToEvent(code, next);
       if (!result.success) {
@@ -57,7 +60,9 @@ export function RsvpButtons({
         toast.success(
           result.data.status === "going"
             ? "참석으로 응답했어요."
-            : "불참으로 응답했어요.",
+            : wasWaiting
+              ? "대기를 취소했어요."
+              : "불참으로 응답했어요.",
         );
       }
       // 서버 컴포넌트(참석자 목록, 정원 게이지, 상세 링크)를 최신 상태로 갱신
@@ -80,21 +85,33 @@ export function RsvpButtons({
         </p>
       ) : (
         <>
-          {isFull && status !== "going" && (
+          {isWaiting ? (
             <p className="rounded-lg bg-secondary p-3 text-sm text-secondary-foreground">
-              정원이 가득 찼어요. 참석을 누르면 대기로 등록돼요.
+              {order ? `대기 ${order}번이에요. ` : "대기 중이에요. "}
+              자리가 나면 자동으로 참석으로 바뀌어요.
             </p>
+          ) : (
+            isFull &&
+            status !== "going" && (
+              <p className="rounded-lg bg-secondary p-3 text-sm text-secondary-foreground">
+                정원이 가득 찼어요. 참석을 누르면 대기로 등록돼요.
+              </p>
+            )
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button
               className="h-11"
               variant={status === "going" ? "default" : "outline"}
-              disabled={isPending}
+              disabled={isPending || isWaiting}
               onClick={() => respond("going")}
             >
-              {isFull && status !== "going" && status !== "waitlist"
-                ? "대기 신청"
-                : "참석"}
+              {isWaiting
+                ? order
+                  ? `대기 ${order}번`
+                  : "대기 중"
+                : isFull && status !== "going"
+                  ? "대기 신청"
+                  : "참석"}
             </Button>
             <Button
               className="h-11"
@@ -102,7 +119,7 @@ export function RsvpButtons({
               disabled={isPending}
               onClick={() => respond("not_going")}
             >
-              불참
+              {isWaiting ? "대기 취소" : "불참"}
             </Button>
           </div>
         </>

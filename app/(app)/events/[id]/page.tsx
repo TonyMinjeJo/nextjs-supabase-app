@@ -1,10 +1,10 @@
+import { LoadingState } from "@/components/loading-state";
 import { AnnouncementBoard } from "@/components/event/announcement-board";
 import {
   CancelEventButton,
   DeleteEventButton,
 } from "@/components/event/cancel-event-button";
 import { CoverImage } from "@/components/event/cover-image";
-import { EmptyState } from "@/components/event/empty-state";
 import { ParticipantList } from "@/components/event/participant-list";
 import { RsvpButtons } from "@/components/event/rsvp-buttons";
 import { ShareLinkButton } from "@/components/event/share-link-button";
@@ -98,9 +98,6 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
   const isHost = !!user && event.host_id === user.id;
   const encodedId = encodeURIComponent(event.id);
 
-  // 공지·참석자 탭은 실데이터. 카풀·정산 탭은 Task 010~011에서 DB와 연결합니다.
-  const pending = <EmptyState message="준비 중이에요. 곧 이용할 수 있어요." />;
-
   return (
     <>
       {/* 주최자만 lg 이상에서 넓은 폭을 켭니다. 참여자는 500px 열 유지 */}
@@ -176,48 +173,34 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
         </div>
 
         <Tabs defaultValue="announcements">
-          <TabsList className="w-full">
+          <TabsList className="w-full group-data-[orientation=horizontal]/tabs:h-12 sm:group-data-[orientation=horizontal]/tabs:h-9">
             <TabsTrigger value="announcements">공지</TabsTrigger>
             <TabsTrigger value="participants">참석자</TabsTrigger>
-            <TabsTrigger value="carpool">카풀</TabsTrigger>
-            <TabsTrigger value="settlement">정산</TabsTrigger>
           </TabsList>
           <TabsContent value="announcements">
-            <Suspense
-              fallback={
-                <p className="text-sm text-muted-foreground">불러오는 중...</p>
-              }
-            >
+            <Suspense fallback={<LoadingState />}>
               <AnnouncementsPanel event={event} isHost={isHost} />
             </Suspense>
           </TabsContent>
           <TabsContent value="participants">
-            <Suspense
-              fallback={
-                <p className="text-sm text-muted-foreground">불러오는 중...</p>
-              }
-            >
+            <Suspense fallback={<LoadingState />}>
               <ParticipantsPanel event={event} userId={user?.id} />
             </Suspense>
           </TabsContent>
-          <TabsContent value="carpool">{pending}</TabsContent>
-          <TabsContent value="settlement">{pending}</TabsContent>
         </Tabs>
       </div>
     </>
   );
 }
 
-// 이벤트 상세 (F001) - 헤더는 실데이터, 탭 4개는 Task 008~011에서 연결
+// 이벤트 상세 (F001) - 헤더와 공지·참석자 탭 모두 실데이터
 export default function EventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-sm text-muted-foreground">불러오는 중...</p>}
-    >
+    <Suspense fallback={<LoadingState />}>
       <EventDetail params={params} />
     </Suspense>
   );

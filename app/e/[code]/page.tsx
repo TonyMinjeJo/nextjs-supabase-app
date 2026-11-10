@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { CapacityGauge } from "@/components/event/capacity-gauge";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { getEventInvite } from "@/lib/data/events";
 import { getMyParticipationByCode } from "@/lib/data/participations";
 import { formatEventDate } from "@/lib/format";
 import { getNowMs } from "@/lib/now";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
@@ -69,7 +71,13 @@ async function InviteContent({
         {event.description && (
           <p className="text-sm text-muted-foreground">{event.description}</p>
         )}
-        <CapacityGauge current={event.going_count} capacity={event.capacity} />
+        {/* 취소된 이벤트에는 정원 마감 표시가 의미 없고 취소 안내와 충돌하므로 숨깁니다. */}
+        {!event.canceled && (
+          <CapacityGauge
+            current={event.going_count}
+            capacity={event.capacity}
+          />
+        )}
 
         {isLoggedIn ? (
           <div className="flex flex-col gap-3">
@@ -135,6 +143,48 @@ async function InviteContent({
   );
 }
 
+// 공유 미리보기(카톡 등)용 메타데이터. 이미 공개된 초대 요약(제목·일시·장소·주최자 이름)만 씁니다.
+// 초대 링크는 검색 결과에 노출될 필요가 없어 색인을 막습니다.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}): Promise<Metadata> {
+  const { code } = await params;
+  const robots = { index: false, follow: false };
+
+  const event = await getEventInvite(code);
+  if (!event) return { title: "초대 링크", robots };
+
+  const description = [
+    formatEventDate(event.starts_at),
+    event.location,
+    event.host_name ? `주최 ${event.host_name}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    title: event.title,
+    description,
+    robots,
+    // openGraph/twitter를 지정하면 루트의 이미지 설정이 상속되지 않으므로 이미지를 직접 가리킵니다.
+    openGraph: {
+      type: "website",
+      locale: "ko_KR",
+      title: event.title,
+      description,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: event.title,
+      description,
+      images: ["/twitter-image"],
+    },
+  };
+}
+
 // 이벤트 초대 (F002) - 공개 요약 + 로그인 유도 + 참석 응답(로그인 시)
 export default function InvitePage({
   params,
@@ -142,9 +192,7 @@ export default function InvitePage({
   params: Promise<{ code: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-sm text-muted-foreground">불러오는 중...</p>}
-    >
+    <Suspense fallback={<LoadingState />}>
       <InviteContent params={params} />
     </Suspense>
   );

@@ -32,7 +32,13 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"}>
+        {/* 모바일은 터치 영역 40px, sm 이상은 기존 높이 */}
+        <Button
+          variant="ghost"
+          size={"sm"}
+          className="h-10 sm:h-8"
+          aria-label="테마 변경"
+        >
           {theme === "light" ? (
             <Sun
               key="light"

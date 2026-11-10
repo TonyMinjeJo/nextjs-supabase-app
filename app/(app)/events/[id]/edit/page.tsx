@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { EventForm } from "@/components/event/event-form";
 import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth/session";
@@ -77,11 +78,7 @@ export default function EditEventPage({
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-bold">이벤트 수정</h1>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
-        }
-      >
+      <Suspense fallback={<LoadingState />}>
         <EditEventContent params={params} />
       </Suspense>
     </div>

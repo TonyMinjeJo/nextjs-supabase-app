@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { EventForm } from "@/components/event/event-form";
 import { getEvent } from "@/lib/data/events";
 import { Suspense } from "react";
@@ -45,11 +46,7 @@ export default function NewEventPage({
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-bold">이벤트 만들기</h1>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
-        }
-      >
+      <Suspense fallback={<LoadingState />}>
         <NewEventContent searchParams={searchParams} />
       </Suspense>
     </div>

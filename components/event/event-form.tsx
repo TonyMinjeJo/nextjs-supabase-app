@@ -7,7 +7,6 @@ import {
   type CoverValue,
 } from "@/components/event/cover-image-field";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,17 +27,17 @@ interface EventFormProps {
   coverUrl?: string | null;
 }
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="text-sm text-destructive">
+    <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
       {message}
     </p>
   );
 }
 
 // 이벤트 생성/수정 폼 (F001). 서버 액션으로 저장합니다.
-// 주간 반복(F008)은 Task 012에서 지원하므로 지금은 비활성 안내만 둡니다.
+// 주간 반복은 MVP 범위 밖이라 화면에 없습니다. (스키마의 recurrence 입력과 서버의 거부 처리는 유지)
 export function EventForm({
   defaultValues,
   eventId,
@@ -147,9 +146,10 @@ export function EventForm({
           className="h-11"
           placeholder="예: 금요 풋살 모임"
           aria-invalid={!!errors.title}
+          aria-describedby={errors.title ? "title-error" : undefined}
           {...register("title")}
         />
-        <FieldError message={errors.title?.message} />
+        <FieldError id="title" message={errors.title?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -159,9 +159,12 @@ export function EventForm({
           rows={3}
           placeholder="준비물, 모이는 방법 등을 적어 주세요."
           aria-invalid={!!errors.description}
+          aria-describedby={
+            errors.description ? "description-error" : undefined
+          }
           {...register("description")}
         />
-        <FieldError message={errors.description?.message} />
+        <FieldError id="description" message={errors.description?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -171,9 +174,10 @@ export function EventForm({
           type="datetime-local"
           className="h-11"
           aria-invalid={!!errors.startsAt}
+          aria-describedby={errors.startsAt ? "startsAt-error" : undefined}
           {...register("startsAt")}
         />
-        <FieldError message={errors.startsAt?.message} />
+        <FieldError id="startsAt" message={errors.startsAt?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -183,9 +187,10 @@ export function EventForm({
           className="h-11"
           placeholder="예: 성수 풋살파크"
           aria-invalid={!!errors.location}
+          aria-describedby={errors.location ? "location-error" : undefined}
           {...register("location")}
         />
-        <FieldError message={errors.location?.message} />
+        <FieldError id="location" message={errors.location?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -197,9 +202,10 @@ export function EventForm({
           min={1}
           className="h-11"
           aria-invalid={!!errors.capacity}
+          aria-describedby={errors.capacity ? "capacity-error" : undefined}
           {...register("capacity", { valueAsNumber: true })}
         />
-        <FieldError message={errors.capacity?.message} />
+        <FieldError id="capacity" message={errors.capacity?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -209,9 +215,12 @@ export function EventForm({
           type="datetime-local"
           className="h-11"
           aria-invalid={!!errors.rsvpDeadline}
+          aria-describedby={
+            errors.rsvpDeadline ? "rsvpDeadline-error" : undefined
+          }
           {...register("rsvpDeadline")}
         />
-        <FieldError message={errors.rsvpDeadline?.message} />
+        <FieldError id="rsvpDeadline" message={errors.rsvpDeadline?.message} />
       </div>
 
       <CoverImageField
@@ -220,13 +229,6 @@ export function EventForm({
         existingUrl={coverUrl}
         disabled={isSubmitting}
       />
-
-      <div className="flex items-center gap-3 rounded-lg border p-4">
-        <Checkbox id="recurrence" disabled />
-        <Label htmlFor="recurrence" className="text-muted-foreground">
-          매주 반복하기 (준비 중)
-        </Label>
-      </div>
 
       <Button type="submit" className="h-11" disabled={isSubmitting}>
         {isEdit ? "수정 저장" : "이벤트 만들기"}

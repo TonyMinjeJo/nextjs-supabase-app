@@ -67,7 +67,11 @@ export function UpdatePasswordForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-500">
+                  {error}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "저장 중..." : "새 비밀번호 저장"}
               </Button>

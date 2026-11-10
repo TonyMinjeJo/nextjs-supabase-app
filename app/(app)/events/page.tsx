@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { EmptyState } from "@/components/event/empty-state";
 import { EventCard } from "@/components/event/event-card";
 import { ShareLinkButton } from "@/components/event/share-link-button";
@@ -112,7 +113,7 @@ async function MyEventsContent() {
 
   return (
     <Tabs defaultValue="all">
-      <TabsList className="w-full">
+      <TabsList className="w-full group-data-[orientation=horizontal]/tabs:h-12 sm:group-data-[orientation=horizontal]/tabs:h-9">
         <TabsTrigger value="all">전체</TabsTrigger>
         <TabsTrigger value="hosting">주최</TabsTrigger>
         <TabsTrigger value="joined">참여</TabsTrigger>
@@ -155,11 +156,7 @@ export default function MyEventsPage() {
           <Link href="/events/new">이벤트 만들기</Link>
         </Button>
       </div>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
-        }
-      >
+      <Suspense fallback={<LoadingState />}>
         <MyEventsContent />
       </Suspense>
     </div>

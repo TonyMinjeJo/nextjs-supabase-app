@@ -11,7 +11,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: { default: "모임 이벤트", template: "%s | 모임 이벤트" },
-  description: "공지, 참석, 카풀, 정산을 링크 하나로 관리하는 모임 이벤트 앱",
+  description: "공지, 참석, 출석을 링크 하나로 관리하는 모임 이벤트 앱",
 };
 
 const geistSans = Geist({

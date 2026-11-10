@@ -42,7 +42,7 @@ export function LogoutButton({ className }: { className?: string }) {
     <Button
       variant="ghost"
       size="sm"
-      className={cn("px-2", className)}
+      className={cn("h-10 px-2 sm:h-8", className)}
       onClick={logout}
       disabled={signingOut || isPending}
     >

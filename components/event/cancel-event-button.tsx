@@ -91,13 +91,19 @@ export function ConfirmActionButton({
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={isPending}
+            >
               돌아가기
             </Button>
           </DialogClose>
           <Button
             type="button"
             variant="destructive"
+            className="h-11"
             disabled={isPending}
             onClick={handleConfirm}
           >
@@ -123,7 +129,7 @@ export function CancelEventButton({
       className={className}
       triggerLabel="이벤트 취소"
       title="이벤트를 취소할까요?"
-      description="취소하면 참석 응답과 출석 체크를 더 이상 받을 수 없고, 되돌릴 수 없어요. 비용이나 정산 내역이 있으면 취소할 수 없어요."
+      description="취소하면 참석 응답과 출석 체크를 더 이상 받을 수 없고, 되돌릴 수 없어요."
       confirmLabel="이벤트 취소"
       successMessage="이벤트를 취소했어요."
       action={cancelEvent}
@@ -131,7 +137,7 @@ export function CancelEventButton({
   );
 }
 
-// 이벤트 삭제: 취소된 이벤트만 가능하며 참석·공지·카풀 등 연결된 데이터가 함께 지워집니다.
+// 이벤트 삭제: 취소된 이벤트만 가능하며 참석·공지 등 연결된 데이터가 함께 지워집니다.
 export function DeleteEventButton({
   eventId,
   className,
@@ -145,7 +151,7 @@ export function DeleteEventButton({
       className={className}
       triggerLabel="이벤트 삭제"
       title="이벤트를 완전히 삭제할까요?"
-      description="참석 응답, 공지, 카풀 등 이 이벤트의 모든 데이터가 지워지고 되돌릴 수 없어요."
+      description="참석 응답, 공지 등 이 이벤트의 모든 데이터가 지워지고 되돌릴 수 없어요."
       confirmLabel="완전히 삭제"
       successMessage="이벤트를 삭제했어요."
       action={deleteEvent}

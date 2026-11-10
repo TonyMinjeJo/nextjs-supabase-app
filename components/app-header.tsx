@@ -10,7 +10,7 @@ import { Suspense } from "react";
 async function AdminLink() {
   if (!(await isAdmin())) return null;
   return (
-    <Button asChild variant="ghost" size="sm" className="px-2">
+    <Button asChild variant="ghost" size="sm" className="h-10 px-2 sm:h-8">
       <Link href="/admin">관리자</Link>
     </Button>
   );
@@ -35,10 +35,20 @@ export function AppHeader() {
           aria-label="주 메뉴"
           className="order-3 flex w-full items-center text-sm sm:order-2 sm:w-auto"
         >
-          <Button asChild variant="ghost" size="sm" className="px-2">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-10 px-2 sm:h-8"
+          >
             <Link href="/events">내 이벤트</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm" className="px-2">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-10 px-2 sm:h-8"
+          >
             <Link href="/events/new">이벤트 만들기</Link>
           </Button>
         </nav>

@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -59,11 +60,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense
-      fallback={
-        <p className="p-4 text-sm text-muted-foreground">불러오는 중...</p>
-      }
-    >
+    <Suspense fallback={<LoadingState className="p-4" />}>
       <AdminGate>{children}</AdminGate>
     </Suspense>
   );

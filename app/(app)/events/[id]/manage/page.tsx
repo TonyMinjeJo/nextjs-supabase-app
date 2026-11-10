@@ -1,5 +1,5 @@
+import { LoadingState } from "@/components/loading-state";
 import { AttendanceChecklist } from "@/components/event/attendance-checklist";
-import { EmptyState } from "@/components/event/empty-state";
 import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth/session";
 import { getEvent } from "@/lib/data/events";
@@ -29,7 +29,6 @@ async function EventManage({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  // 출석 체크는 실데이터. 비용·정산 보드는 Task 011에서 DB와 연결합니다.
   const participants = await getParticipants(event.id);
   const goingRows = participants.filter((p) => p.status === "going");
 
@@ -45,21 +44,18 @@ async function EventManage({ params }: { params: Promise<{ id: string }> }) {
         </Button>
       </div>
       <AttendanceChecklist eventId={event.id} goingRows={goingRows} />
-      <EmptyState message="비용과 정산은 준비 중이에요." />
     </div>
   );
 }
 
-// 이벤트 관리 (F005, F007) - 본문은 Task 008/011에서 연결
+// 이벤트 관리 (F005) - 주최자 전용 출석 체크
 export default function EventManagePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-sm text-muted-foreground">불러오는 중...</p>}
-    >
+    <Suspense fallback={<LoadingState />}>
       <EventManage params={params} />
     </Suspense>
   );

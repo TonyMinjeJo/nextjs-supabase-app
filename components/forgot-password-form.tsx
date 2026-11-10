@@ -84,7 +84,11 @@ export function ForgotPasswordForm({
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-sm text-red-500">
+                    {error}
+                  </p>
+                )}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "보내는 중..." : "재설정 메일 보내기"}
                 </Button>

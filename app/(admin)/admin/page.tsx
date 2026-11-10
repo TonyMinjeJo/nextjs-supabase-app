@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -59,11 +60,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-bold">대시보드</h1>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
-        }
-      >
+      <Suspense fallback={<LoadingState />}>
         <DashboardContent />
       </Suspense>
     </div>

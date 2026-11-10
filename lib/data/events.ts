@@ -3,6 +3,7 @@ import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import type { EventCardProps, MeetupEvent } from "@/lib/types";
 import { isShareCode, isUuid } from "@/lib/validations/ids";
+import { cache } from "react";
 
 // 이벤트 조회 계층. 접근 제어는 RLS(호스트/멤버/admin)가 1차이고, 여기서는 형식 검증과
 // 도메인 타입 변환만 합니다. 쿠키를 읽으므로 Suspense 안(요청 시점)에서 호출하세요.
@@ -94,30 +95,33 @@ export interface EventInvite {
   canceled: boolean;
 }
 
-/** share_code로 공개 초대 요약 조회 (get_event_invite RPC). 없으면 null */
-export async function getEventInvite(
-  code: string,
-): Promise<EventInvite | null> {
-  if (!isShareCode(code)) return null;
+/**
+ * share_code로 공개 초대 요약 조회 (get_event_invite RPC). 없으면 null
+ * 같은 요청 안에서 페이지와 generateMetadata가 함께 부르므로 cache()로 한 번만 조회합니다.
+ */
+export const getEventInvite = cache(
+  async (code: string): Promise<EventInvite | null> => {
+    if (!isShareCode(code)) return null;
 
-  const supabase = createAnonClient();
-  const { data, error } = await supabase.rpc("get_event_invite", {
-    p_code: code,
-  });
-  if (error) throw new Error(`초대 조회 실패: ${error.message}`);
+    const supabase = createAnonClient();
+    const { data, error } = await supabase.rpc("get_event_invite", {
+      p_code: code,
+    });
+    if (error) throw new Error(`초대 조회 실패: ${error.message}`);
 
-  const row = data?.[0];
-  if (!row) return null;
-  // 생성 타입은 description/rsvp_deadline을 non-null로 표기하지만 실제 컬럼은 nullable입니다.
-  return {
-    title: row.title,
-    description: row.description ?? null,
-    starts_at: row.starts_at,
-    location: row.location,
-    capacity: row.capacity,
-    rsvp_deadline: row.rsvp_deadline ?? null,
-    host_name: row.host_name ?? null,
-    going_count: row.going_count,
-    canceled: row.canceled,
-  };
-}
+    const row = data?.[0];
+    if (!row) return null;
+    // 생성 타입은 description/rsvp_deadline을 non-null로 표기하지만 실제 컬럼은 nullable입니다.
+    return {
+      title: row.title,
+      description: row.description ?? null,
+      starts_at: row.starts_at,
+      location: row.location,
+      capacity: row.capacity,
+      rsvp_deadline: row.rsvp_deadline ?? null,
+      host_name: row.host_name ?? null,
+      going_count: row.going_count,
+      canceled: row.canceled,
+    };
+  },
+);

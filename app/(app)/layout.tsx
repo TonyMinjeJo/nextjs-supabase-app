@@ -7,8 +7,21 @@ import { PageContainer } from "@/components/page-container";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <PageContainer className="flex flex-col lg:has-[[data-page-wide]]:max-w-5xl">
+      {/* 키보드 사용자가 헤더를 건너뛰고 바로 본문으로 가는 링크. 평소엔 숨겨져 있고 Tab으로 포커스하면 보입니다. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-md focus:ring-2 focus:ring-ring"
+      >
+        본문으로 건너뛰기
+      </a>
       <AppHeader />
-      <main className="mx-auto w-full flex-1 px-4 py-6">{children}</main>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full flex-1 px-4 py-6 outline-none"
+      >
+        {children}
+      </main>
     </PageContainer>
   );
 }

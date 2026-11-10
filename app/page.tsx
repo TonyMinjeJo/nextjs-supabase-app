@@ -52,13 +52,13 @@ export default function Home() {
       <main className="mx-auto flex w-full flex-1 flex-col justify-center gap-8 px-4 pb-16">
         <div className="flex flex-col gap-3 text-center">
           <h1 className="text-3xl font-bold tracking-tight">
-            공지, 참석, 카풀, 정산을
+            공지, 참석, 출석을
             <br />
             링크 하나로
           </h1>
           <p className="text-sm text-muted-foreground">
-            카톡방 수작업 없이 모임 이벤트를 만들고, 링크로 초대하고, 끝까지
-            정산하세요.
+            카톡방 수작업 없이 모임 이벤트를 만들고, 링크로 초대하고, 참석과
+            출석까지 한 곳에서 확인하세요.
           </p>
         </div>
         <Suspense

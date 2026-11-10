@@ -1,3 +1,4 @@
+import { LoadingState } from "@/components/loading-state";
 import { EventTable } from "@/components/admin/event-table";
 import { getAdminEventRows } from "@/lib/mocks/admin";
 import { getNowMs } from "@/lib/now";
@@ -18,11 +19,7 @@ export default function AdminEventsPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold">이벤트</h1>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
-        }
-      >
+      <Suspense fallback={<LoadingState />}>
         <EventsContent />
       </Suspense>
     </div>
