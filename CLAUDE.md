@@ -55,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 1. **`proxy.ts`** (Next 16에서 `middleware.ts`를 대체)가 `lib/supabase/proxy.ts`의 `updateSession`을 호출합니다.
 2. **`updateSession`** 은 `supabase.auth.getClaims()`로 세션 쿠키를 갱신하고, 비로그인 사용자를 `/auth/login`으로 리다이렉트합니다.
-   - 비로그인 허용 경로: `/`, `/login`·`/login/*`, `/auth`·`/auth/*`, `/e/*` (이벤트 초대: 공개 요약 + 로그인 유도), `/admin/login` (관리자 로그인, 정확히 일치만). 경계 매칭이라 `/loginfoo`, `/authx` 같은 경로는 허용되지 않음
+   - 비로그인 허용 경로: `/`, `/login`·`/login/*`, `/auth`·`/auth/*`, `/e/*` (이벤트 초대: 공개 요약 + 로그인 유도), `/admin/login` (관리자 로그인, 정확히 일치만), `/opengraph-image`·`/twitter-image` (공유 미리보기 이미지, 정확히 일치만). 경계 매칭이라 `/loginfoo`, `/authx` 같은 경로는 허용되지 않음
    - 비로그인 `/admin*` 은 `/admin/login?next=<원래 경로>`로, 로그인 상태로 `/admin/login`에 접근하면 `/admin`으로 보냅니다.
    - 그 외 경로는 `/auth/login?next=<원래 경로>`로 리다이렉트하며, `next`는 `getSafeNext()`로 검증합니다. 기본 복귀 경로는 홈(`/`)입니다. (`DEFAULT_AFTER_LOGIN`)
    - `createServerClient`와 `getClaims()` 사이에 다른 코드를 넣지 마세요.

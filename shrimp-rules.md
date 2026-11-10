@@ -44,7 +44,7 @@
 - **금지**: `getClaims()` 제거.
 - **금지**: Supabase 클라이언트를 모듈 전역 변수에 저장. 요청/함수마다 새로 생성한다.
 - 서버 코드는 `await createClient()` (`lib/supabase/server.ts`), 브라우저 코드는 `lib/supabase/client.ts`를 사용한다.
-- 비로그인 허용 경로(`/`, `/login`·`/login/*`, `/auth`·`/auth/*`, `/e/*`, `/admin/login` 정확 일치. 경계 매칭)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
+- 비로그인 허용 경로(`/`, `/login`·`/login/*`, `/auth`·`/auth/*`, `/e/*`, `/admin/login`·`/opengraph-image`·`/twitter-image` 정확 일치. 경계 매칭)를 바꾸면 `lib/supabase/proxy.ts`의 조건문과 `CLAUDE.md`의 해당 문구를 **함께** 수정한다.
 - `next` 쿼리 파라미터로 리다이렉트할 때는 반드시 `getSafeNext()`를 거친다.
   - 허용: `redirect(getSafeNext(searchParams.get("next")))`
   - 금지: `redirect(searchParams.get("next")!)`
