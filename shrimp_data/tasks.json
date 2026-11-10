@@ -1766,6 +1766,501 @@
       "analysisResult": "Task 009 공지(F003): 이벤트 상세 공지 탭을 실데이터로 연결한다. DB(announcements 테이블, 컬럼 단위 권한, RLS 정책 4개)는 Task 006에서 이미 준비돼 있어 마이그레이션과 RPC 없이 앱 코드와 문서만 바꾼다. 결정: 본문 1000자 서버 검증만(DB CHECK 없음), 취소된 이벤트는 화면 숨김과 서버 액션 차단으로 읽기 전용, 공지 수정 기능 없음(작성·삭제·상단 고정만). 계획 파일: C:\\Users\\Tony\\.claude\\plans\\plan-task-dapper-lemon.md",
       "summary": "docs/PRD.md에 announcements의 author_id와 공지 규칙(주최자 전용 작성·삭제·고정, 고정 우선 최신순, 읽기는 주최자와 응답한 참여자, 1000자 서버 검증, 수정 불가, 취소 이벤트 읽기 전용, 서버 액션에만 있는 차단)을 반영했다. docs/ROADMAP.md는 Task 009를 완료로 바꾸고 현재 상태·진행표를 갱신했으며 TC-009-01~07을 체크하고 TC-009-08·09를 추가해 체크했다. 작업 기록에 구현·검증 표·알려진 한계·시험 환경 메모·Task 010 입력을 남겼고, 입력 중 카풀 memo 컬럼이 DB에 없는데 ROADMAP 본문에는 메모가 있는 불일치를 확인해 기록했다. npm run check-all과 npm run build가 순서대로 통과했다. TC-009-05는 참석 응답만 다시 확인했고 대기 승급·출석은 재시험하지 않았음을 문서에 정직하게 적었다.",
       "completedAt": "2026-11-09T12:38:44.153Z"
+    },
+    {
+      "id": "2c4736f8-6f82-4d0f-8bf5-7f062c33ac19",
+      "name": "Task 010-1 테스트 환경·계정·시드 준비",
+      "description": "통합 테스트에 쓸 계정과 환경을 확인한다. 주최자 1명과 참여자 최소 3명(A, B, C, D까지 권장)의 이메일 로그인 가능 계정을 확인하거나 준비한다. npm run dev 실행 상태와 .env.local 환경 변수를 확인한다. Google 로그인은 OAuth 자동화가 불가하므로 사용자에게 수동 로그인 협조를 요청하거나 이메일 로그인으로 대체하고 그 사실을 기록한다. Playwright 세션은 계정별로 분리(로그아웃 후 재로그인 또는 별도 컨텍스트)한다. 테스트 데이터는 제목에 [T010] 접두어를 붙여 구분한다. 신규 계정 생성이나 기존 데이터 변경이 필요하면 사용자에게 먼저 확인한다.",
+      "notes": "서비스 롤 키 등 비밀 값을 코드나 기록에 남기지 않는다. 사용자 승인 없이 DB 데이터를 변경하지 않는다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:05:06.956Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "REFERENCE",
+          "description": "Task 010 정의와 기존 TC-007~009",
+          "lineStart": 150,
+          "lineEnd": 154
+        },
+        {
+          "path": "app/auth/login/page.tsx",
+          "type": "REFERENCE",
+          "description": "로그인 진입과 next 파라미터 처리"
+        }
+      ],
+      "implementationGuide": "1) mcp__supabase__execute_sql로 profiles와 auth 사용자 존재 여부를 읽기 전용 조회. 2) 부족한 계정은 사용자에게 이메일 가입 또는 계정 제공을 요청. 3) 개발 서버 기동 확인 후 Playwright로 /auth/login 진입 확인. 4) 계정 목록과 로그인 방식을 작업 메모에 정리.",
+      "verificationCriteria": "주최자 1명과 참여자 3명 이상이 로그인 가능하고 개발 서버가 정상 응답한다. Google 로그인 처리 방식이 기록되어 있다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "개발 서버(200)와 .env.local의 Supabase 변수 2개를 확인했다. 기존 이메일 계정은 minjetony@naver.com 1개뿐이고 Google admin은 자동화 불가, jminje1205는 미인증이라 사용자 승인을 받아 SQL로 테스트 계정 4개(t010-host, t010-a, t010-b, t010-c @example.test)를 이메일 인증 완료 상태로 만들었다. Playwright 격리 컨텍스트(host, a, b, c)로 모두 로그인에 성공했다. Google 로그인은 이번 통합 테스트에서 검증하지 않으며 수동 확인 항목으로 기록한다. 010-7에서 계정과 데이터를 삭제해야 한다.",
+      "completedAt": "2026-11-09T14:05:06.954Z"
+    },
+    {
+      "id": "fca716eb-4c99-43c6-8bd3-23c6e73d8ead",
+      "name": "Task 010-2 정상 E2E 통합 플로우 (데스크톱)",
+      "description": "하나의 [T010] 이벤트(정원 2)로 전 단계를 이어서 검증한다. 주최자 생성, 공유 링크 확인, 비로그인으로 /e/code 접속 후 로그인 유도, 로그인 후 next로 이벤트 초대 복귀, 참여자 A·B 참석, 주최자 공지 작성과 고정, 참여자 화면의 공지 노출, 주최자 출석 체크와 인원 요약 확인. 단계마다 browser_console_messages로 콘솔 에러 0건, browser_network_requests로 의도하지 않은 4xx/5xx 없음을 확인한다. TC-010-01~ 번호로 결과를 기록한다.",
+      "notes": "기존 TC-007~009와 중복되는 단일 기능 검증은 피하고 이어지는 흐름 검증에 집중한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "2c4736f8-6f82-4d0f-8bf5-7f062c33ac19"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:07:24.463Z",
+      "relatedFiles": [
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "REFERENCE",
+          "description": "공개 초대 화면"
+        },
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "REFERENCE",
+          "description": "참석 응답·출석 서버 액션"
+        },
+        {
+          "path": "app/(app)/events/announcement-actions.ts",
+          "type": "REFERENCE",
+          "description": "공지 서버 액션"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "REFERENCE",
+          "description": "주최자 관리 화면"
+        }
+      ],
+      "implementationGuide": "Playwright MCP: 주최자 세션으로 /events/new 생성 → 상세에서 share_code 확인 → 로그아웃 상태로 /e/code 접속 → 로그인 버튼 → 참여자 A 로그인 → 초대 화면 복귀 확인 → 참석 클릭 → B 반복 → 주최자로 공지 작성·고정 → 참여자 화면 확인 → 주최자 manage에서 출석 체크 → 요약 수치 확인. DB 상태는 execute_sql로 participations를 교차 확인.",
+      "verificationCriteria": "전 단계가 기대대로 동작하고 콘솔 에러와 의도하지 않은 네트워크 실패가 없으며 DB의 participations 상태가 화면과 일치한다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "TC-010-01~10 통과. 주최자 생성(정원 2), 복사 토스트와 DB share_code 일치(gz9h4WVE82Uy), 비로그인 /e/code 요약과 로그인 유도, 로그인 후 next로 초대 화면 복귀, A·B 참석(1/2, 2/2), 공지 2개 작성 후 오래된 공지 고정 시 맨 위로 이동, 참여자 화면의 같은 순서와 쓰기 UI 없음, 출석 체크 1/2명과 DB attended 일치. 모든 요청 200, 콘솔 에러 0건. 이벤트 id 9cae3cef-9cee-4dbb-8917-3a78eb49dbcc는 010-4에서 재사용한다.",
+      "completedAt": "2026-11-09T14:07:24.461Z"
+    },
+    {
+      "id": "19badc1e-a3d4-4663-b8a2-37b2658f1aea",
+      "name": "Task 010-3 정원 초과·대기 연쇄 승급·마감 엣지 검증",
+      "description": "정원이 가득 찬 이벤트에서 참여자 C·D가 대기로 등록되어 순번 1·2가 안내되는지 확인한다. 참석자 한 명이 취소하면 대기 1순위(C)만 승급하고 D는 1순위로 재정렬되는지, 이어서 다른 참석자가 취소하면 D가 승급하는지 검증한다(대기자 2명 이상). 신청 마감 이후 응답이 rsvp_closed 메시지로 차단되는지 확인한다. 마감 검증용 이벤트는 마감이 과거인 값으로 생성하거나 SQL로 조정하고 그 사실을 기록한다.",
+      "notes": "TC-008-05 동시 신청은 이미 통과했으므로 재실행은 선택 사항.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "2c4736f8-6f82-4d0f-8bf5-7f062c33ac19"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:09:14.736Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "REFERENCE",
+          "description": "respondToEvent 오류 코드 매핑 rsvp_closed"
+        },
+        {
+          "path": "lib/data/participations.ts",
+          "type": "REFERENCE",
+          "description": "참석 데이터 조회"
+        }
+      ],
+      "implementationGuide": "Playwright: 정원 2 이벤트에 A·B 참석 후 C·D 참석 → 대기 순번 확인 → A 불참 전환 → C 승급 확인 → D 순번 1 확인 → B 불참 전환 → D 승급 확인. execute_sql로 status와 waitlist_order 교차 확인. 마감 이벤트에서 참여자가 참석 시도 후 한국어 차단 메시지 확인.",
+      "verificationCriteria": "승급 순서가 대기 등록 순서와 일치하고 대기 순번이 재정렬되며 마감 후 응답이 차단된다. 화면과 DB 값이 일치한다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "TC-010-11~15 통과. 정원 2 이벤트에서 C·D가 대기 1·2번으로 등록되고(DB created_at 순서 일치), A 불참 시 C만 승급하며 D는 대기 1번으로 재정렬, B 불참 시 D가 승급했다. 화면과 DB 값이 일치. 마감은 UI로 과거 마감일 이벤트(XI80043f0xW4)를 만들어 확인했고 버튼 숨김과 신청이 마감되었어요 안내가 나오며 RPC가 going·not_going 모두 rsvp_closed로 거부해 참석 기록 0건이다. D는 기존 계정 minjetony@naver.com을 사용했다. 관찰: 대기 상태에서도 정원이 가득 찼어요 안내 문구가 남는다. 콘솔 에러 0건.",
+      "completedAt": "2026-11-09T14:09:14.734Z"
+    },
+    {
+      "id": "99a0bc24-9f22-4f8e-a11b-8ad66cb44b81",
+      "name": "Task 010-4 취소·삭제와 교차 차단 검증",
+      "description": "주최자가 이벤트를 취소하면 취소됨 뱃지가 표시되고, 취소된 이벤트에서 참석 응답(event_canceled), 출석 체크, 공지 작성·고정·삭제가 모두 차단되며 모두에게 읽기 전용인지 확인한다. 취소된 이벤트만 삭제 가능하고 삭제 후 초대 링크가 존재하지 않는 코드 안내 화면으로 처리되는지 확인한다. 삭제 후 연관 데이터 정리 상태를 execute_sql로 확인한다.",
+      "notes": "삭제는 되돌릴 수 없으므로 [T010] 접두어 테스트 이벤트에만 수행한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "fca716eb-4c99-43c6-8bd3-23c6e73d8ead"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:11:33.348Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/actions.ts",
+          "type": "REFERENCE",
+          "description": "취소·삭제 서버 액션"
+        },
+        {
+          "path": "app/(app)/events/announcement-actions.ts",
+          "type": "REFERENCE",
+          "description": "취소 후 공지 차단"
+        }
+      ],
+      "implementationGuide": "Playwright: 주최자 취소 → 참여자 세션에서 초대 화면과 상세 확인 → 응답 시도 → 주최자 관리 화면에서 출석·공지 버튼 숨김 확인 → 삭제 실행 → /e/code 접속 시 not found 안내와 콘솔 에러 없음 확인. execute_sql로 events, participations, announcements 잔여 행 확인.",
+      "verificationCriteria": "취소 후 모든 쓰기가 서버에서 거부되고 화면은 읽기 전용이며 삭제 후 링크가 안내 화면으로 처리되고 DB에 잔여 데이터가 없다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "TC-010-16~22 통과. 주최자 취소 후 취소됨 뱃지와 삭제 버튼 노출, 공지 입력창 숨김. 취소 전에 열어 둔 오래된 화면으로 공지 작성·고정·삭제와 출석 체크를 시도하자 서버가 모두 거부했고 DB 값(공지 2개·고정 1개, attended)이 그대로였다. 참여자 초대 화면은 취소된 이벤트 안내만 표시되고 RPC가 respond_to_event·set_attendance는 event_canceled, 중복 취소는 already_canceled로 거부했다. 참여자 상세는 읽기 전용이다. 앱의 이벤트 완전 삭제 후 events·participations·announcements가 0건이며 /e/code와 상세 URL이 페이지를 찾을 수 없어요 안내로 처리되고 콘솔 에러 0건. 관찰: 취소된 초대 화면에 정원 마감 2/2명 표시가 남는다.",
+      "completedAt": "2026-11-09T14:11:33.344Z"
+    },
+    {
+      "id": "93f21a36-5a5f-4be2-91aa-b870474cff9c",
+      "name": "Task 010-5 권한 분리·RLS 우회 시도·보안 점검",
+      "description": "두 계정 권한 분리를 확인한다. 참여자 세션으로 타인 이벤트 수정, events 직접 DELETE, canceled_at 직접 UPDATE, participations 직접 INSERT/UPDATE, 비주최자의 set_attendance 호출, 비참여자의 공지 조회, 참여자의 공지 작성 시도를 수행해 모두 거부되는지 확인한다. RLS 우회 시도는 mcp__supabase__execute_sql에서 트랜잭션 안에서 set local role authenticated와 request.jwt.claims 설정으로 재현하고 반드시 롤백한다. 마지막으로 mcp__supabase__get_advisors로 보안 경고를 재확인한다.",
+      "notes": "프로덕션 데이터에 영구 변경이 남지 않도록 모든 SQL 시도는 롤백한다. 서비스 롤 키는 사용하지 않는다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "fca716eb-4c99-43c6-8bd3-23c6e73d8ead"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:12:39.302Z",
+      "relatedFiles": [
+        {
+          "path": "lib/supabase/database.types.ts",
+          "type": "REFERENCE",
+          "description": "테이블과 RPC 시그니처 (직접 수정 금지)"
+        },
+        {
+          "path": "app/(app)/events/participation-actions.ts",
+          "type": "REFERENCE",
+          "description": "forbidden, not_going_participant 오류 코드"
+        }
+      ],
+      "implementationGuide": "1) execute_sql: begin; set local role authenticated; select set_config('request.jwt.claims', json 문자열, true); 시도 쿼리 실행 후 오류 또는 0행 확인; rollback. 2) 브라우저에서 가능한 시도(URL 직접 접근, 서버 액션 거부 메시지)는 Playwright로 확인. 3) get_advisors security 실행 후 경고를 기록(무료 플랜 불가 항목은 제외 표기).",
+      "verificationCriteria": "모든 우회 시도가 거부되거나 0행으로 처리되고 DB에 변경이 남지 않으며 get_advisors 결과가 기록되어 있다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "TC-010-23~30 통과. 롤백 트랜잭션에서 참여자 A는 타인 이벤트 UPDATE 0행, events DELETE·canceled_at UPDATE·participations INSERT/UPDATE 42501, set_attendance forbidden, 공지 INSERT는 RLS 위반(42501)이고 UPDATE·DELETE는 0행, cancel_event·delete_event는 not_host, role 변경 42501로 거부됐다. 비참여자 C는 공지·참석·이벤트·타인 프로필 조회가 모두 0건, anon은 events·profiles 조회와 cancel_event·respond_to_event가 42501이며 get_event_invite만 의도대로 공개된다. 브라우저에서 비멤버의 수정·관리·상세 URL은 페이지를 찾을 수 없어요, 일반 사용자의 /admin은 관리자만 볼 수 있어요로 차단됐다. 롤백 후 제목 변조와 잔여 데이터가 없고 advisors는 기존 의도된 경고(anon get_event_invite, 인증 사용자 RPC 5개, 유출 비밀번호 보호 미지원)뿐이다.",
+      "completedAt": "2026-11-09T14:12:39.300Z"
+    },
+    {
+      "id": "bdda3c5a-c773-46f0-a22c-91831da706cf",
+      "name": "Task 010-6 콘솔·네트워크·모바일 375px 반복 검증",
+      "description": "Task 010-2~4의 핵심 플로우(초대 진입, 참석/불참, 대기 안내, 공지 고정 노출, 출석 체크, 취소 다이얼로그)를 375px 모바일 뷰포트에서 반복한다. 가로 넘침, 버튼 줄바꿈, 터치 가능 크기 이상을 확인하고 각 화면에서 콘솔 에러와 네트워크 실패가 없음을 확인한다. 발견한 UI 결함은 원인 분류와 함께 기록한다.",
+      "notes": "UI 결함이 발견되면 최소 수정 후 재검증하며 그 경우 코드 변경이므로 check-all과 build가 필요하다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "19badc1e-a3d4-4663-b8a2-37b2658f1aea"
+        },
+        {
+          "taskId": "99a0bc24-9f22-4f8e-a11b-8ad66cb44b81"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:14:50.221Z",
+      "relatedFiles": [
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "REFERENCE",
+          "description": "모바일 진입 화면"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "REFERENCE",
+          "description": "이벤트 상세"
+        }
+      ],
+      "implementationGuide": "mcp__playwright__browser_resize로 375x812 설정 후 핵심 플로우 반복. browser_console_messages와 browser_network_requests로 에러 점검. 스크린샷으로 가로 넘침 확인. 데스크톱과 결과 차이를 기록.",
+      "verificationCriteria": "375px에서 전 플로우가 가로 넘침 없이 동작하고 콘솔 에러와 네트워크 실패가 없다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "TC-010-31~38 통과. 375x812에서 이벤트 생성 폼, 초대 화면(참석, 정원 마감 시 대기 신청과 대기 1번 안내), 상세 공지 탭(고정 공지 맨 위, 참여자 화면에 쓰기 UI 없음), 참석자 탭(참석 1명·대기 1명), 관리 화면 출석 체크(1/1명), 취소 다이얼로그(좌우 여백 16px 안)를 확인했고 모든 화면에서 가로 넘침이 없었다. 주요 버튼은 높이 44px, 앱 요청은 전부 200, 콘솔 에러 0건. UI 결함은 없고 개선 제안 3건: 헤더 링크·로그아웃·테마 버튼 32px, 취소 다이얼로그 버튼 36px(WCAG 최소 24px 충족, 권장 44px 미달), 대기 중에도 정원이 가득 찼어요 안내 문구 유지. 코드 변경이 없어 check-all과 build는 생략했다.",
+      "completedAt": "2026-11-09T14:14:50.219Z"
+    },
+    {
+      "id": "83e9e9c3-b1e8-4c1c-bb50-33a59ff970f4",
+      "name": "Task 010-7 결과 기록·버그 수정·테스트 데이터 정리·완료 처리",
+      "description": "docs/ROADMAP.md 테스트 체크리스트에 Task 010 섹션과 TC-010-xx를 [분류] 형식과 실행 일시로 추가하고 실패 항목은 구현 버그/시나리오 오류/환경 문제로 원인 분류해 기록한다. 발견된 버그는 최소 수정 후 해당 TC를 재검증한다. 코드 변경이 있으면 npm run check-all 후 npm run build를 순서대로 통과시킨다(문서만 변경이면 생략). [T010] 테스트 이벤트는 사용자 확인 후 취소·delete_event로 정리한다. 모든 TC가 통과하면 docs:update-roadmap 스킬로 Task 010을 ✅ 처리한다.",
+      "notes": "PRD와 코드 충돌이 있으면 PRD를 기준으로 하되 충돌 사실을 보고한다. shrimp_data/는 수정 금지.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "93f21a36-5a5f-4be2-91aa-b870474cff9c"
+        },
+        {
+          "taskId": "bdda3c5a-c773-46f0-a22c-91831da706cf"
+        }
+      ],
+      "createdAt": "2026-11-09T13:00:16.069Z",
+      "updatedAt": "2026-11-09T14:17:44.855Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "TC-010 체크리스트 추가와 Task 010 완료 표시"
+        }
+      ],
+      "implementationGuide": "1) ROADMAP.md 체크리스트에 '### Task 010 (핵심 기능 통합 테스트)' 추가, 기존 형식 '- [x] TC-010-NN [분류] 내용 (YYYY-MM-DD)' 준수. 2) 버그가 있으면 수정 → 재검증 → check-all → build. 3) 정리 대상 목록을 사용자에게 보여주고 승인 후 삭제. 4) docs:update-roadmap 스킬 호출. 커밋은 사용자가 요청할 때만 수행.",
+      "verificationCriteria": "모든 TC-010 항목이 실행 일시와 함께 기록되고 실패 항목은 원인 분류가 있으며 코드 변경 시 check-all과 build가 통과하고 Task 010이 ✅ 처리되어 있다.",
+      "analysisResult": "ROADMAP Task 010: Task 006~009 핵심 기능(이벤트 생성·공유·취소, 참석·대기 승급·출석, 공지)을 Playwright MCP와 Supabase MCP로 통합·회귀 검증하고 TC-010-xx를 docs/ROADMAP.md에 실행 일시와 함께 기록한다. 신규 기능 구현이 아니라 검증이 목적이다. 테스트 러너는 도입하지 않는다. 문서와 보고는 한국어. 소스는 저장소 루트(app/, components/, lib/). 실패는 구현 버그/시나리오 오류/환경 문제로 분류해 기록한다. 코드를 수정했다면 npm run check-all 후 npm run build를 순서대로 통과해야 완료다.",
+      "summary": "docs/ROADMAP.md에 Task 010 체크리스트(TC-010-01~38 통과, 실행 일시 2026-11-09)와 작업 기록, 시험 환경 메모를 추가하고 진행표·현황·Task 010 항목을 완료로 갱신했다. 결함이 없어 원인 분류 대상과 코드 변경이 없고 check-all과 build는 생략했다. 개선 제안 3건은 Task 011 입력으로 기록했다. 사용자 승인 후 [T010] 이벤트 2건과 시험 계정 4개를 삭제했고 잔여 0건과 기존 계정 3개만 남은 것을 조회로 확인했다. Google 로그인 참여 경로(TC-010-39)는 OAuth 자동화 불가로 미체크 항목으로 남겼고 사용자 수동 확인이 필요하다.",
+      "completedAt": "2026-11-09T14:17:44.853Z"
+    },
+    {
+      "id": "583386b4-b77d-4677-81dd-936cd970fe7e",
+      "name": "Task 011-1 준비 중 제거와 문구 정리",
+      "description": "PRD MVP에 없는 카풀·정산과 비활성 반복 체크박스를 UI에서 제거하고 문구를 맞춘다. (1) app/(app)/events/[id]/page.tsx: 카풀·정산 TabsTrigger와 TabsContent, pending 변수 제거로 공지·참석자 2개 탭만 남기고 오래된 Task 번호 주석 정리. (2) app/(app)/events/[id]/manage/page.tsx: 비용과 정산은 준비 중이에요 EmptyState 제거와 미사용 import 정리. (3) components/event/event-form.tsx: 매주 반복하기 (준비 중) 체크박스 블록과 Task 012 주석 제거, recurrenceSchema와 서버의 반복 거부 코드는 유지. (4) app/page.tsx와 app/layout.tsx: 공지, 참석, 카풀, 정산 문구를 공지, 참석, 출석 중심으로 바꾸고 하위 문구와 metadata description도 맞춘다. cancel_event의 비용이나 정산 내역 오류 메시지와 관리자 더미 화면의 정산 문구는 범위 밖이라 유지한다.",
+      "notes": "components/ui 수정 금지. Label과 Checkbox가 event-form의 다른 곳에서 쓰이는지 확인한 뒤에만 import를 지운다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:24:13.701Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "카풀·정산 탭과 pending 제거"
+        },
+        {
+          "path": "app/(app)/events/[id]/manage/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "비용과 정산 준비 중 안내 제거"
+        },
+        {
+          "path": "components/event/event-form.tsx",
+          "type": "TO_MODIFY",
+          "description": "비활성 반복 체크박스 제거"
+        },
+        {
+          "path": "app/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "홈 문구"
+        },
+        {
+          "path": "app/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "metadata description"
+        }
+      ],
+      "implementationGuide": "각 파일에서 해당 JSX 블록을 삭제하고 미사용이 된 import(EmptyState, Checkbox, Label 등)를 eslint 경고 없이 정리한다. Tabs는 공지·참석자 2개만 남긴다. 홈 헤드라인 예: 공지, 참석, 출석을 링크 하나로. 하위 문구 예: 카톡방 수작업 없이 모임 이벤트를 만들고, 링크로 초대하고, 참석과 출석까지 한 곳에서 확인하세요.",
+      "verificationCriteria": "상세에 공지·참석자 탭만 있고 관리 화면에 준비 중 문구가 없으며 생성 폼에 반복 체크박스가 없다. 홈 문구와 앱 설명에 카풀·정산이 없다. npm run lint와 typecheck에 오류가 없다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "이벤트 상세의 카풀·정산 탭과 pending 변수, 관리 화면의 비용과 정산 준비 중 안내, 생성 폼의 비활성 반복 체크박스를 제거하고 미사용 import(EmptyState, Checkbox)와 오래된 Task 번호 주석을 정리했다. 홈 헤드라인과 하위 문구, 앱 metadata description을 공지·참석·출석 중심으로 바꿨고 취소·삭제 확인창의 비용·정산·카풀 문구도 정리했다. recurrenceSchema와 서버의 반복 거부, cancel_event 오류 메시지, 관리자 더미 화면은 계획대로 유지했다. typecheck와 eslint가 오류 없이 통과했다. 브라우저 확인은 011-7에서 한다.",
+      "completedAt": "2026-11-09T14:24:13.699Z"
+    },
+    {
+      "id": "d64eadfd-c569-42f0-90f8-436032c222bb",
+      "name": "Task 011-2 죽은 코드 정리",
+      "description": "어디서도 import하지 않는 컴포넌트를 삭제한다. 삭제 전에 grep으로 import가 없음을 다시 확인한다. 대상: components/event/carpool-board.tsx, settlement-panel.tsx, manage-board.tsx, components/hero.tsx, deploy-button.tsx, auth-button.tsx, env-var-warning.tsx, next-logo.tsx, supabase-logo.tsx. 남기는 것: lib/mocks/*, lib/settlement.ts, components/event/payment-badge.tsx(관리자 더미 화면이 사용), components/ui/*(shadcn 관리 대상). 삭제 후 사용처가 사라진 export나 import 오류가 없는지 확인한다.",
+      "notes": "Task 011-1이 끝난 뒤 진행한다. 의문이 있는 파일은 삭제하지 말고 보고한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "583386b4-b77d-4677-81dd-936cd970fe7e"
+        }
+      ],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:24:42.118Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/carpool-board.tsx",
+          "type": "TO_MODIFY",
+          "description": "삭제 대상"
+        },
+        {
+          "path": "components/event/settlement-panel.tsx",
+          "type": "TO_MODIFY",
+          "description": "삭제 대상"
+        },
+        {
+          "path": "components/event/manage-board.tsx",
+          "type": "TO_MODIFY",
+          "description": "삭제 대상"
+        },
+        {
+          "path": "components/hero.tsx",
+          "type": "TO_MODIFY",
+          "description": "스타터 잔재 삭제 대상"
+        }
+      ],
+      "implementationGuide": "각 파일명으로 grep을 돌려 import가 0건인지 확인한 뒤 삭제한다. 삭제 후 npm run typecheck와 lint로 깨진 참조를 확인한다. components/ui/select.tsx 등이 미사용이 돼도 수정하지 않고 그대로 둔다.",
+      "verificationCriteria": "삭제한 파일을 가리키는 import가 없고 npm run check-all이 통과하며 관리자 더미 화면(/admin 계열)이 그대로 빌드된다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "삭제 전에 파일명 문자열과 상대 경로 import를 grep으로 확인해 외부 importer가 0건임을 확인한 뒤 미사용 컴포넌트 9개(carpool-board, settlement-panel, manage-board, hero, deploy-button, auth-button, env-var-warning, next-logo, supabase-logo)를 삭제했다. lib/mocks, lib/settlement.ts, payment-badge.tsx, components/ui는 관리자 더미 화면과 shadcn 관리 대상이라 그대로 두었다. 삭제 후 npm run check-all(lint, typecheck, format:check)이 통과했다. components/ui/select.tsx가 미사용이 됐지만 계획대로 수정하지 않았다. 빌드는 011-3 이후에 확인한다.",
+      "completedAt": "2026-11-09T14:24:42.115Z"
+    },
+    {
+      "id": "abcdda39-1b2c-45fd-80ef-2b579ee63497",
+      "name": "Task 011-3 공유 링크 미리보기(OG) 교체",
+      "description": "app/opengraph-image.png와 twitter-image.png가 Supabase Next.js Starter Kit 템플릿 그림이라 초대 링크 미리보기가 엉뚱하다. 이를 삭제하고 app/opengraph-image.tsx(ImageResponse)로 대체하되 twitter-image는 같은 모듈을 재사용한다. 한글 글리프가 필요하므로 Noto Sans KR을 글자 부분집합(text 파라미터)으로 받아 쓰고 실패 시 영문만이라도 그려지게 한다. app/e/[code]/page.tsx에 generateMetadata를 추가해 공개 요약(getEventInvite)의 제목·일시·장소로 title, description, openGraph를 만들고 없는 코드는 일반 제목과 robots index false로 처리한다. lib/data/events.ts의 getEventInvite를 React cache()로 감싸 generateMetadata와 페이지가 RPC를 두 번 부르지 않게 한다.",
+      "notes": "Cache Components 규칙 위반은 npm run build에서만 드러날 수 있으니 빌드로 확인한다. 한글 폰트 접근이 막히면 폰트 파일을 저장소에 넣는 방식(OFL 라이선스)으로 바꿀지 판단하고 보고한다. 실제 카톡 미리보기는 로컬에서 확인할 수 없다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:27:11.138Z",
+      "relatedFiles": [
+        {
+          "path": "app/opengraph-image.png",
+          "type": "TO_MODIFY",
+          "description": "스타터 킷 이미지, 삭제"
+        },
+        {
+          "path": "app/twitter-image.png",
+          "type": "TO_MODIFY",
+          "description": "스타터 킷 이미지, 삭제"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "generateMetadata 추가"
+        },
+        {
+          "path": "lib/data/events.ts",
+          "type": "TO_MODIFY",
+          "description": "getEventInvite를 cache()로 감싸기"
+        }
+      ],
+      "implementationGuide": "ImageResponse는 next/og에서 import한다. 폰트는 fetch로 Google Fonts CSS를 받아 ttf URL을 파싱해 ArrayBuffer로 읽는다(woff2는 불가). 실패하면 fonts 옵션 없이 영문 텍스트만 그린다. generateMetadata는 params를 await해 getEventInvite(code)를 호출한다. 공개된 요약 외 정보(host_id, 계좌, 참석자)는 쓰지 않는다.",
+      "verificationCriteria": "curl로 /e/<code> HTML의 og:title과 og:image를 확인하고 /opengraph-image 응답이 스타터 킷 이미지가 아닌 한글이 표시된 앱 이미지다. 잘못된 코드에서도 오류 없이 일반 메타데이터가 나온다. npm run build가 통과한다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "스타터 킷 PNG 2개를 삭제하고 app/opengraph-image.tsx(ImageResponse, Noto Sans KR 부분집합 폰트, 실패 시 영문 대체, 성공한 폰트는 인스턴스 안에서 재사용)와 twitter-image.tsx를 추가했다. 초대 페이지에 generateMetadata를 추가해 제목·일시·장소·주최자로 og/twitter 메타를 만들고 noindex 처리했으며 getEventInvite를 cache()로 감쌌다. 검증 중 결함 2건을 찾아 고쳤다: 페이지의 openGraph가 루트 이미지를 상속하지 않아 og:image가 빠진 문제는 이미지를 명시해 해결했고, 확장자 없는 이미지 경로가 proxy에서 로그인으로 리다이렉트(307)되어 크롤러가 이미지를 받지 못하는 문제는 proxy.ts 허용 경로에 /opengraph-image와 /twitter-image를 정확 일치로 추가하고 CLAUDE.md와 shrimp-rules.md를 함께 갱신해 해결했다. curl로 유효 코드의 og 태그, 잘못된 코드의 일반 메타, 비로그인 이미지 200(한글 표시 확인), 유사 경로 보호를 확인했고 check-all과 build가 통과했다. 폰트 접근이 막힌 환경의 영문 대체 경로는 직접 시험하지 못했다.",
+      "completedAt": "2026-11-09T14:27:11.136Z"
+    },
+    {
+      "id": "f7877887-0a13-42f7-ae69-4507bd5e48e2",
+      "name": "Task 011-4 로딩·오류 화면 통일",
+      "description": "공용 components/loading-state.tsx(role=status, 스켈레톤 또는 스피너)를 만들어 app 아래 16개 파일에 흩어진 fallback p 불러오는 중... 을 통일한다. 공용 components/error-view.tsx와 app/error.tsx, app/(app)/error.tsx(헤더 유지), app/global-error.tsx를 추가한다. 한국어 안내, 다시 시도(reset), 홈으로 버튼, 개발 환경에서만 오류 메시지 표시. loading.tsx는 페이지마다 Suspense가 이미 있어 중복이므로 추가하지 않는다. not-found.tsx는 문구만 점검한다.",
+      "notes": "components/ui 수정 금지. app/error.tsx는 루트 레이아웃 안에서 동작한다.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:30:57.087Z",
+      "relatedFiles": [
+        {
+          "path": "app/not-found.tsx",
+          "type": "REFERENCE",
+          "description": "기존 안내 화면 스타일 참고"
+        },
+        {
+          "path": "components/page-container.tsx",
+          "type": "REFERENCE",
+          "description": "레이아웃 컨테이너"
+        },
+        {
+          "path": "app/(app)/events/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "Suspense fallback 치환 예시"
+        }
+      ],
+      "implementationGuide": "error.tsx와 global-error.tsx는 use client 컴포넌트이며 props는 error와 reset이다. global-error는 html과 body를 직접 렌더링해야 한다. grep으로 fallback 사용처를 찾아 LoadingState로 치환한다. 기존 Button과 Card 컴포넌트를 재사용한다.",
+      "verificationCriteria": "fallback에 불러오는 중 텍스트가 직접 남아 있지 않고 모두 LoadingState를 쓴다. 서버 오류를 일부러 내면 error 화면과 다시 시도 버튼이 동작하고 (app) 영역은 헤더가 유지된다. 임시 오류 코드는 남기지 않는다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "공용 LoadingState(role=status, 움직임 줄이기 대응)를 만들어 Suspense fallback 12곳(10개 파일)을 치환했고, 홈의 비활성 버튼 자리표시자와 fallback null은 용도가 달라 유지했다. 공용 ErrorView와 app/error.tsx, app/(app)/error.tsx, app/global-error.tsx를 추가했다. 임시 오류 페이지로 브라우저 시험을 해서 (app) 영역은 헤더가 유지되며 다시 시도로 복구되고 루트 영역은 헤더 없이 경계 화면이 뜨는 것을 확인했다. 시험 중 구현 결함 1건을 찾아 수정했다: 서버 컴포넌트 오류에서는 reset()만으로 서버를 다시 부르지 않아 복구되지 않았고 router.refresh()를 함께 호출하도록 고쳤다(첫 시험 실패는 임시 페이지의 모듈 변수 카운터 설계 오류도 겹쳐 있어 globalThis로 바꿔 재시험). 임시 페이지는 삭제했고 잔여 코드가 없음을 grep으로 확인했으며 check-all과 build가 통과했다. 한계: global-error는 루트 레이아웃이 실패해야 발동하므로 직접 시험하지 못했고 loading.tsx는 계획대로 추가하지 않았다.",
+      "completedAt": "2026-11-09T14:30:57.084Z"
+    },
+    {
+      "id": "f4cd59cc-ff84-4512-a68e-305f145d1f10",
+      "name": "Task 011-5 Task 010 개선 제안 반영",
+      "description": "Task 010 통합 테스트에서 나온 개선 3건을 반영한다. (1) components/event/rsvp-buttons.tsx: 대기 중(waitlist)이면 정원이 가득 찼어요 안내 대신 대기 N번이에요, 자리가 나면 자동으로 참석으로 바뀌어요 문구를 보이고 참석 버튼은 비활성 대기 N번, 불참 버튼 라벨은 대기 취소로 바꾼다(동작은 기존 not_going). (2) app/e/[code]/page.tsx: 취소된 이벤트에서는 정원 마감 게이지(CapacityGauge)를 숨긴다. (3) 탭 영역 크기: components/app-header.tsx의 링크·로그아웃·테마 버튼을 모바일에서 40px 이상으로, components/event/cancel-event-button.tsx의 확인창 버튼을 44px로 맞춘다(className만 조정).",
+      "notes": "app/e/[code]/page.tsx는 Task 011-3도 수정하므로 충돌에 주의한다. components/ui는 수정하지 않는다. 라벨 변경으로 기존 TC 문구가 달라지므로 문서에 기록한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "583386b4-b77d-4677-81dd-936cd970fe7e"
+        }
+      ],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:32:13.049Z",
+      "relatedFiles": [
+        {
+          "path": "components/event/rsvp-buttons.tsx",
+          "type": "TO_MODIFY",
+          "description": "대기 중 문구와 버튼"
+        },
+        {
+          "path": "app/e/[code]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "취소된 이벤트 게이지 숨김"
+        },
+        {
+          "path": "components/app-header.tsx",
+          "type": "TO_MODIFY",
+          "description": "모바일 터치 영역"
+        },
+        {
+          "path": "components/event/cancel-event-button.tsx",
+          "type": "TO_MODIFY",
+          "description": "확인창 버튼 높이"
+        }
+      ],
+      "implementationGuide": "rsvp-buttons에서 status가 waitlist일 때 분기를 추가한다. 헤더는 모바일에서 h-10 이상, sm 이상에서는 기존 높이를 유지해 데스크톱 레이아웃이 바뀌지 않게 한다. 확인창 버튼은 className에 h-11을 준다.",
+      "verificationCriteria": "대기 중 사용자 화면에 정원이 가득 찼어요 안내와 참석 버튼이 없고 대기 N번과 대기 취소가 보이며 대기 취소가 동작한다. 취소된 초대 화면에 게이지가 없다. 375px에서 헤더 버튼 40px 이상, 확인창 버튼 44px이고 데스크톱 헤더는 달라지지 않는다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "개선 3건을 코드에 반영했다. RsvpButtons는 대기 중이면 정원 마감 안내 대신 대기 N번 안내를 보이고 참석 버튼은 비활성 대기 N번, 불참 버튼은 대기 취소(동작은 기존 not_going, 성공 토스트는 대기를 취소했어요)로 바꿨다. 초대 페이지는 취소된 이벤트에서 CapacityGauge를 숨기고, 헤더 링크·로그아웃·테마 버튼은 모바일 h-10 sm:h-8, 확인창 버튼은 h-11로 맞췄다(components/ui 미수정, 테마 버튼에 aria-label 추가). check-all이 통과했다. 브라우저로 헤더만 확인했다: 375px에서 헤더 요소가 모두 40px이고 가로 넘침이 없으며 1280px에서는 버튼 32px, 헤더 57px로 변화가 없다. 대기 중 화면, 취소된 초대 화면의 게이지 숨김, 확인창 버튼 44px는 이벤트와 참여자 계정이 필요해 아직 실행 검증하지 못했고 011-7의 시험 계정 단계에서 확인한다.",
+      "completedAt": "2026-11-09T14:32:13.046Z"
+    },
+    {
+      "id": "fb867e34-b788-4408-9ce2-7d3a9ac4240e",
+      "name": "Task 011-6 접근성 점검·수정",
+      "description": "필요한 곳만 수정한다. (app)/layout.tsx에 본문으로 건너뛰기 링크를 추가하고 키보드 Tab 순서와 포커스 표시를 확인한다. 폼 오류가 입력과 aria-describedby로 연결되는지(components/event/event-form.tsx의 FieldError 등)와 토스트·상태 변경이 스크린리더에 알려지는지 확인한다. 375px에서 헤더와 탭 2개 레이아웃을 최종 점검한다.",
+      "notes": "점검 결과 문제가 없는 항목은 코드를 바꾸지 않고 결과만 기록한다. components/ui 수정 금지.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "f7877887-0a13-42f7-ae69-4507bd5e48e2"
+        },
+        {
+          "taskId": "f4cd59cc-ff84-4512-a68e-305f145d1f10"
+        }
+      ],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:35:15.339Z",
+      "relatedFiles": [
+        {
+          "path": "app/(app)/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "건너뛰기 링크와 main id"
+        },
+        {
+          "path": "components/event/event-form.tsx",
+          "type": "TO_MODIFY",
+          "description": "오류 메시지와 입력 연결"
+        },
+        {
+          "path": "components/app-header.tsx",
+          "type": "REFERENCE",
+          "description": "헤더 키보드 이동"
+        }
+      ],
+      "implementationGuide": "skip link는 sr-only와 focus:not-sr-only 클래스를 쓰고 main에 id를 둔다. FieldError에 id를 주고 입력에 aria-describedby를 연결한다. 점검은 Playwright 스냅샷의 aria 정보와 키보드 이동(browser_press_key)으로 한다.",
+      "verificationCriteria": "키보드만으로 로그인, 이벤트 생성, 참석 응답을 끝낼 수 있고 건너뛰기 링크가 첫 Tab에서 보인다. 폼 오류가 입력과 연결되어 스냅샷에서 확인된다. 375px에서 가로 넘침이 없다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "점검 후 문제가 확인된 곳만 수정했다. (1) (app)/layout에 본문으로 건너뛰기 링크와 main id/tabIndex를 추가했고 첫 Tab에서 링크와 포커스 링이 보이며 Enter로 main에 포커스가 가고 다음 Tab이 본문 첫 컨트롤로 간다. (2) 이벤트 폼 오류가 입력과 연결되지 않던 문제(aria-describedby null)를 고쳐 6개 입력이 오류 문단(role=alert, id)과 연결되고 Enter 제출 시 첫 오류 칸으로 포커스가 이동함을 확인했다. (3) 로그인·가입·비밀번호 재설정·Google 버튼의 오류 문단에 role=alert가 없던 것을 5개 파일에서 고쳐 키보드 로그인에서 틀린 비밀번호 오류가 alert로 노출됨을 확인했다. (4) 탭 높이 29px를 모바일 41px로 키웠다(sm 이상 유지, components/ui 미수정). 라벨 연결, 포커스 링, 참석·불참 버튼 Tab 도달, Tab 순서는 이미 정상이라 코드를 바꾸지 않았다. 375px 상세 화면은 가로 넘침이 없다. check-all과 build 통과. 한계: 실제 스크린리더 음성 출력과 키보드로 참석 응답 실행(데이터 변경 방지)은 하지 않았다.",
+      "completedAt": "2026-11-09T14:35:15.336Z"
+    },
+    {
+      "id": "a9820ec0-29d4-44be-b364-1279974b7979",
+      "name": "Task 011-7 Playwright 검증·ROADMAP·PRD 반영·check-all·build",
+      "description": "Task 011 전체를 Playwright MCP로 검증하고 문서를 갱신한다. 시험 계정이 필요하면 사용자 확인 후 SQL로 만들고 끝나면 지운다(Task 010 방식, 계정은 @example.test, 이벤트 제목은 [T011] 접두어). 시나리오: 정상(상세 탭 2개, 관리 화면 안내 없음, 반복 체크박스 없음, 홈 문구), OG(curl로 og 태그와 /opengraph-image 확인, 잘못된 코드 메타데이터), 예외(오류 화면 다시 시도, 없는 경로 not-found), 경계(대기 중 화면, 취소된 초대 화면 게이지 없음, 정원 마감·마감 후 회귀), 접근성(키보드 흐름), 회귀(Task 007~010 핵심 플로우), 네트워크·콘솔 에러 0건, 375px 모바일. docs/ROADMAP.md에 TC-011-xx 체크리스트와 작업 기록, 카풀·정산 제거와 OG 교체 결정을 기록하고 docs/PRD.md에 카풀·정산이 MVP 밖이라는 점이 없으면 한 줄 보강한다. 마지막에 npm run check-all 다음 npm run build를 순서대로 통과시키고 Task 011을 완료 처리한다(docs:update-roadmap 스킬).",
+      "notes": "실제 카톡 미리보기는 배포 후 Task 012에서 확인해야 한다. 시험 데이터 삭제는 사용자 확인 후 한 번에 실행하고 잔여 0건을 조회로 보고한다.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "d64eadfd-c569-42f0-90f8-436032c222bb"
+        },
+        {
+          "taskId": "abcdda39-1b2c-45fd-80ef-2b579ee63497"
+        },
+        {
+          "taskId": "fb867e34-b788-4408-9ce2-7d3a9ac4240e"
+        }
+      ],
+      "createdAt": "2026-11-09T14:22:30.318Z",
+      "updatedAt": "2026-11-09T14:43:21.895Z",
+      "relatedFiles": [
+        {
+          "path": "docs/ROADMAP.md",
+          "type": "TO_MODIFY",
+          "description": "Task 011 체크리스트와 작업 기록"
+        },
+        {
+          "path": "docs/PRD.md",
+          "type": "TO_MODIFY",
+          "description": "카풀·정산 MVP 밖 명시"
+        }
+      ],
+      "implementationGuide": "기존 TC-010 형식을 따른다: - [x] TC-011-NN [분류] 내용 (YYYY-MM-DD). 새 작업의 체크박스는 비운 채 시작해 실행하며 체크한다. 실패하면 구현 버그, 시나리오 오류, 환경 문제로 분류해 기록하고 구현 버그는 최소 수정 후 해당 TC부터 재검증한다. Google 로그인 경로(TC-010-39)는 자동화 불가이므로 수동 확인 대기로 남긴다.",
+      "verificationCriteria": "모든 TC-011이 실행 일시와 함께 기록되고 실패 항목은 원인 분류가 있다. 콘솔 에러와 네트워크 실패가 없고 npm run check-all과 npm run build가 순서대로 통과하며 Task 011이 완료 처리되어 있다. 시험 데이터는 사용자 확인 후 삭제되어 잔여 0건이다.",
+      "analysisResult": "ROADMAP Task 011 사용자 경험 다듬기. 계획 파일: C:\\Users\\Tony\\.claude\\plans\\playwright-mcp-twinkly-hummingbird.md (승인됨). 확정 결정: 카풀·정산은 PRD MVP 밖이므로 UI에서 제거(DB 테이블 유지), RSVP는 낙관적 갱신 없이 서버 확인 후 반영, loading.tsx는 추가하지 않고 Suspense fallback을 공용 컴포넌트로 통일. 범위 밖: 카풀·정산 구현, 관리자 화면 실데이터 연결(lib/mocks 유지), DB 마이그레이션, metadataBase 변경(Task 012). components/ui는 직접 수정 금지. 소스는 저장소 루트(app/, components/, lib/). 문서와 응답은 한국어. 코드 변경 후 npm run check-all 다음 npm run build 순서로 통과해야 완료. 시험 계정이 필요하면 SQL로 만들되 생성·삭제 전에 사용자에게 확인한다. shrimp_data/는 수정 금지.",
+      "summary": "Task 011 전체를 Playwright MCP로 검증했다(TC-011-01~28 통과). 시험 계정 3개를 SQL로 만들어 격리 컨텍스트로 홈 문구, 생성 폼, 상세 탭 2개, 관리 화면, 확인창 문구, OG 메타와 이미지(curl), 없는 경로와 삭제된 링크 안내, 정원 마감·대기 중 화면, 대기 취소 토스트, 취소된 초대 화면의 게이지 숨김, 마감 후 응답 차단, 건너뛰기 링크, 폼 오류 연결, 375px 레이아웃, 생성부터 삭제까지의 회귀 흐름을 확인했다. 구현 결함 4건(미리보기 이미지 리다이렉트, og:image 누락, 오류 화면 다시 시도 미복구, 폼·로그인 오류 접근성)을 찾아 고쳤다. ROADMAP에 체크리스트와 작업 기록, PRD에 카풀·정산 MVP 밖 명시를 반영했고 check-all과 build가 통과했다. 시험 데이터는 사용자 승인 후 삭제해 잔여 0건을 조회로 확인했다. 미검증은 Google 로그인 참여, 실제 카톡 미리보기, global-error, 영문 대체 이미지, 실제 스크린리더 음성이다.",
+      "completedAt": "2026-11-09T14:43:21.893Z"
     }
   ]
 }
