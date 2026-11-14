@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 import { cache } from "react";
@@ -13,7 +14,8 @@ export interface SessionUser {
 
 /** 로그인한 사용자. 비로그인이거나 환경 변수가 없으면 null */
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
-  if (!hasEnvVars) return null;
+  // 프로덕션에서는 환경 변수가 없으면 null이 아니라 createClient()가 오류를 던집니다. (fail-closed)
+  if (!hasEnvVars && process.env.NODE_ENV !== "production") return null;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const sub = data?.claims?.sub;

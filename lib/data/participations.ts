@@ -1,3 +1,4 @@
+import "server-only";
 import { getSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { ParticipantRowProps, ParticipationStatus } from "@/lib/types";

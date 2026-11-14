@@ -8,13 +8,14 @@ async function ErrorContent({
   searchParams: Promise<{ error: string }>;
 }) {
   const params = await searchParams;
+  // 쿼리 문자열은 누구나 만들 수 있으므로 길이를 제한해 임의 문구 노출(스푸핑)을 줄입니다.
+  const message =
+    typeof params?.error === "string" ? params.error.slice(0, 200) : "";
 
   return (
     <>
-      {params?.error ? (
-        <p className="text-sm text-muted-foreground">
-          오류 내용: {params.error}
-        </p>
+      {message ? (
+        <p className="text-sm text-muted-foreground">오류 내용: {message}</p>
       ) : (
         <p className="text-sm text-muted-foreground">
           알 수 없는 오류가 발생했습니다.

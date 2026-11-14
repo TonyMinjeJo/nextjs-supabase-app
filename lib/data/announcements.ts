@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Announcement } from "@/lib/types";
 import { isUuid } from "@/lib/validations/ids";

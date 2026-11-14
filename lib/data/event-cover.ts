@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
 // 커버 이미지 서명 URL 조회. 버킷이 비공개이므로 표시할 때마다 서명 URL을 발급합니다.

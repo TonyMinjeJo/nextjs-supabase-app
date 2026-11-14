@@ -1,3 +1,4 @@
+import "server-only";
 import { getSessionUser } from "@/lib/auth/session";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
