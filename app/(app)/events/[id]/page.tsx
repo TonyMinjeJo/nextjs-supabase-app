@@ -89,12 +89,26 @@ async function ParticipantsPanel({
   );
 }
 
+// 커버 이미지: 서명 URL 발급을 헤더 렌더링과 분리해 제목·일시가 먼저 스트리밍되게 합니다.
+// 서명에 실패하면 이미지 영역은 그냥 사라집니다.
+async function CoverSection({ path, title }: { path: string; title: string }) {
+  const coverUrl = await getCoverUrl(path);
+  if (!coverUrl) return null;
+  return (
+    <CoverImage
+      src={coverUrl}
+      alt={`${title} 커버 이미지`}
+      className="rounded-lg"
+      priority
+    />
+  );
+}
+
 async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [event, user] = await Promise.all([getEvent(id), getSessionUser()]);
   if (!event) notFound();
 
-  const coverUrl = await getCoverUrl(event.cover_image_path);
   const isHost = !!user && event.host_id === user.id;
   const encodedId = encodeURIComponent(event.id);
 
@@ -112,12 +126,14 @@ async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
         <div
           className={cn("flex flex-col gap-3", isHost && "lg:sticky lg:top-4")}
         >
-          {coverUrl && (
-            <CoverImage
-              src={coverUrl}
-              alt={`${event.title} 커버 이미지`}
-              className="rounded-lg"
-            />
+          {event.cover_image_path && (
+            <Suspense
+              fallback={
+                <div className="aspect-video w-full rounded-lg bg-muted" />
+              }
+            >
+              <CoverSection path={event.cover_image_path} title={event.title} />
+            </Suspense>
           )}
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold">{event.title}</h1>

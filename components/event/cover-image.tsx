@@ -8,10 +8,13 @@ export function CoverImage({
   src,
   alt,
   className,
+  priority = false,
 }: {
   src: string;
   alt: string;
   className?: string;
+  /** 화면 상단(LCP 후보) 이미지에만 켭니다. 목록 카드에는 쓰지 않습니다. */
+  priority?: boolean;
 }) {
   return (
     <div
@@ -25,6 +28,7 @@ export function CoverImage({
         alt={alt}
         fill
         unoptimized
+        priority={priority}
         sizes="(min-width: 640px) 500px, 100vw"
         className="object-cover"
       />

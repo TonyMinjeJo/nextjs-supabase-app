@@ -1,18 +1,5 @@
 import type { NextConfig } from "next";
 
-// Supabase Storage 서명 URL의 호스트. 환경 변수가 없거나 형식이 잘못돼도 설정이 깨지지 않게 합니다.
-function getSupabaseImageHost(): string | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) return null;
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return null;
-  }
-}
-
-const supabaseHost = getSupabaseImageHost();
-
 const nextConfig: NextConfig = {
   cacheComponents: true,
   // Link prefetch 시 정적 부분만 가져옵니다. (cacheComponents와 함께 켜는 것이 권장 설정)
@@ -35,17 +22,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  images: {
-    remotePatterns: supabaseHost
-      ? [
-          {
-            protocol: "https",
-            hostname: supabaseHost,
-            pathname: "/storage/v1/object/sign/event-covers/**",
-          },
-        ]
-      : [],
   },
 };
 
