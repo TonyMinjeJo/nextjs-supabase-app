@@ -1,6 +1,6 @@
 "use client";
 
-import { setAttendance } from "@/app/(app)/events/participation-actions";
+import { setAttendance } from "@/lib/actions/participation";
 import { EmptyState } from "@/components/event/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";

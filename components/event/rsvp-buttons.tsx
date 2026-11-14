@@ -1,6 +1,6 @@
 "use client";
 
-import { respondToEvent } from "@/app/(app)/events/participation-actions";
+import { respondToEvent } from "@/lib/actions/participation";
 import { ParticipationBadge } from "@/components/event/participation-badge";
 import { Button } from "@/components/ui/button";
 import type { ParticipationStatus } from "@/lib/types";

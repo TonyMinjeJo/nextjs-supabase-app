@@ -1,6 +1,6 @@
 "use client";
 
-import { cancelEvent, deleteEvent } from "@/app/(app)/events/actions";
+import { cancelEvent, deleteEvent } from "@/lib/actions/event";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

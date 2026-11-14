@@ -4,7 +4,7 @@ import {
   createAnnouncement,
   deleteAnnouncement,
   setAnnouncementPinned,
-} from "@/app/(app)/events/announcement-actions";
+} from "@/lib/actions/announcement";
 import { ConfirmActionButton } from "@/components/event/cancel-event-button";
 import { EmptyState } from "@/components/event/empty-state";
 import { Badge } from "@/components/ui/badge";

@@ -1,6 +1,6 @@
 "use client";
 
-import { createEvent, updateEvent } from "@/app/(app)/events/actions";
+import { createEvent, updateEvent } from "@/lib/actions/event";
 import {
   CoverImageField,
   COVER_MIME_EXT,
